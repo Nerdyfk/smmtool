@@ -1,57 +1,53 @@
 /**
- * Toolkity Pro / Global SMM - Authentication & Google OAuth Controller
- * Supports Email/Password login & registration, Sign in with Google simulation,
- * and persistent session state in localStorage.
+ * SMMTOOL Pro — Authentication Controller (API-backed)
+ * Supports Email/Password login & registration via MongoDB backend,
+ * JWT token session management, and Google OAuth placeholder.
  */
 
 class AuthManager {
   constructor() {
-    this.storageKey = 'toolkity_user_session';
-    this.user = this.loadUserSession();
+    this.user = null;
+    this.isLoading = true;
     this.init();
   }
 
-  init() {
+  async init() {
+    await this.restoreSession();
     this.setupAuthModals();
     this.renderTopBarAuth();
     this.setupGoogleAuthModal();
+    this.isLoading = false;
   }
 
-  loadUserSession() {
+  /**
+   * Restore session from JWT token via /api/auth/me
+   */
+  async restoreSession() {
+    if (!window.smmAPI || !window.smmAPI.isLoggedIn()) {
+      this.user = null;
+      return;
+    }
+
     try {
-      const saved = localStorage.getItem(this.storageKey);
-      if (saved) {
-        return JSON.parse(saved);
+      const data = await window.smmAPI.getMe();
+      if (data && data.user) {
+        this.user = { ...data.user, isLoggedIn: true };
+      } else {
+        this.user = null;
+        window.smmAPI.removeToken();
       }
     } catch (e) {
-      console.error('Error loading session:', e);
+      console.warn('[SMMTOOL] Session restore failed:', e.message);
+      this.user = null;
+      window.smmAPI.removeToken();
     }
-    // Default initial mock logged-in state for instant preview
-    const defaultUser = {
-      isLoggedIn: true,
-      role: "admin", // Administrator full control
-      username: "global_builder",
-      name: "Alex Vance",
-      email: "builder@smmtool.pro",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80",
-      balance: 92.71,
-      totalSpent: 234.69,
-      ordersCount: 9,
-      apiKey: "smmtool_live_79a24c18f902b3e8",
-      tier: "Master Admin & VIP Elite",
-      timezone: "UTC - 05:00 (EST)"
-    };
-    this.saveUserSession(defaultUser);
-    return defaultUser;
   }
 
-  saveUserSession(userData) {
+  /**
+   * Update local user state and notify all listeners
+   */
+  setUser(userData) {
     this.user = userData;
-    try {
-      localStorage.setItem(this.storageKey, JSON.stringify(userData));
-    } catch (e) {
-      console.error('Error saving session:', e);
-    }
     this.renderTopBarAuth();
     window.dispatchEvent(new CustomEvent('auth:updated', { detail: this.user }));
   }
@@ -61,15 +57,7 @@ class AuthManager {
     if (!container) return;
 
     if (this.user && this.user.isLoggedIn) {
-      const isAdmin = this.user.role === 'admin';
       container.innerHTML = `
-        ${isAdmin ? `
-          <button type="button" class="admin-topbar-pill" onclick="window.toolkityApp.switchView('admin-dashboard')" title="Open Master Admin Control Center">
-            <span class="admin-shield-icon">🛡️</span>
-            <span>Admin Panel</span>
-          </button>
-        ` : ''}
-
         <div class="user-balance-pill" onclick="window.toolkityApp.switchView('add-funds')" title="Click to Add Funds via Bangla QR or Crypto">
           <span class="balance-icon">💳</span>
           <span class="balance-amount">$${(this.user.balance || 0).toFixed(2)} USD</span>
@@ -78,8 +66,8 @@ class AuthManager {
 
         <div class="user-profile-menu-wrapper" id="user-profile-menu-wrapper">
           <button type="button" class="user-avatar-btn" id="user-menu-trigger" aria-label="User Account Menu">
-            <img src="${this.user.avatar}" alt="${this.user.username}" class="user-avatar-img">
-            <span class="user-handle-name">@${this.user.username}</span>
+            <img src="${this.user.avatar || 'https://ui-avatars.com/api/?name=U&background=a855f7&color=fff&size=100'}" alt="${this.user.username || 'User'}" class="user-avatar-img">
+            <span class="user-handle-name">@${this.user.username || 'user'}</span>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <polyline points="6 9 12 15 18 9"></polyline>
             </svg>
@@ -87,19 +75,14 @@ class AuthManager {
 
           <div class="user-dropdown-dropdown" id="user-dropdown-dropdown">
             <div class="user-dropdown-header">
-              <img src="${this.user.avatar}" alt="${this.user.username}" class="user-dropdown-avatar">
+              <img src="${this.user.avatar || 'https://ui-avatars.com/api/?name=U&background=a855f7&color=fff&size=100'}" alt="${this.user.username || 'User'}" class="user-dropdown-avatar">
               <div>
-                <div class="user-dropdown-name">${this.user.name}</div>
-                <div class="user-dropdown-email">${this.user.email}</div>
-                <div class="user-dropdown-tier">${this.user.tier}</div>
+                <div class="user-dropdown-name">${this.user.name || this.user.username || 'User'}</div>
+                <div class="user-dropdown-email">${this.user.email || ''}</div>
+                <div class="user-dropdown-tier">${this.user.tier || 'Starter'}</div>
               </div>
             </div>
             <div class="user-dropdown-divider"></div>
-            ${isAdmin ? `
-              <a class="user-dropdown-item admin-highlight" data-action="admin-dashboard" style="background: rgba(130, 71, 229, 0.12); color: #a855f7; font-weight: 700;">
-                <span>🛡️</span> <span>Master Admin Panel</span>
-              </a>
-            ` : ''}
             <a class="user-dropdown-item" data-action="new-order">
               <span>➕</span> <span>New Order</span>
             </a>
@@ -164,28 +147,77 @@ class AuthManager {
   }
 
   setupAuthModals() {
-    // Form submits
+    // Login form
     const loginForm = document.getElementById('auth-login-form');
     if (loginForm) {
-      loginForm.addEventListener('submit', (e) => {
+      loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const usernameOrEmail = document.getElementById('login-username-input')?.value || 'user';
-        this.login({
-          username: usernameOrEmail.includes('@') ? usernameOrEmail.split('@')[0] : usernameOrEmail,
-          email: usernameOrEmail.includes('@') ? usernameOrEmail : `${usernameOrEmail}@global-smm.com`,
-          name: usernameOrEmail
-        });
+        const email = document.getElementById('login-username-input')?.value || '';
+        const password = document.getElementById('login-password-input')?.value || '';
+
+        if (!email || !password) {
+          window.toolkityApp.showToast('Error', 'Please enter email and password.', 'error');
+          return;
+        }
+
+        const submitBtn = loginForm.querySelector('button[type="submit"]');
+        const originalText = submitBtn ? submitBtn.innerHTML : '';
+        if (submitBtn) {
+          submitBtn.innerHTML = '<span>⏳</span> <span>Signing in...</span>';
+          submitBtn.disabled = true;
+        }
+
+        try {
+          const data = await window.smmAPI.login(email, password);
+          this.setUser({ ...data.user, isLoggedIn: true });
+          this.closeAllAuthModals();
+          window.toolkityApp.showToast('Welcome Back!', `Signed in as @${data.user.username || data.user.email}`, 'success');
+        } catch (error) {
+          window.toolkityApp.showToast('Login Failed', error.message, 'error');
+        } finally {
+          if (submitBtn) {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+          }
+        }
       });
     }
 
+    // Register form
     const registerForm = document.getElementById('auth-register-form');
     if (registerForm) {
-      registerForm.addEventListener('submit', (e) => {
+      registerForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const username = document.getElementById('register-username-input')?.value || 'new_trader';
-        const name = document.getElementById('register-name-input')?.value || 'New Creator';
-        const email = document.getElementById('register-email-input')?.value || `${username}@global-smm.com`;
-        this.register({ username, name, email });
+        const username = document.getElementById('register-username-input')?.value || '';
+        const name = document.getElementById('register-name-input')?.value || '';
+        const email = document.getElementById('register-email-input')?.value || '';
+        const password = document.getElementById('register-password-input')?.value || '';
+
+        if (!username || !email || !password) {
+          window.toolkityApp.showToast('Error', 'Please fill in all required fields.', 'error');
+          return;
+        }
+
+        const submitBtn = registerForm.querySelector('button[type="submit"]');
+        const originalText = submitBtn ? submitBtn.innerHTML : '';
+        if (submitBtn) {
+          submitBtn.innerHTML = '<span>⏳</span> <span>Creating account...</span>';
+          submitBtn.disabled = true;
+        }
+
+        try {
+          const data = await window.smmAPI.register(email, password, username, name);
+          this.setUser({ ...data.user, isLoggedIn: true });
+          this.closeAllAuthModals();
+          window.toolkityApp.showToast('Account Created!', `Welcome to SMMTOOL! Your account has been created.`, 'success');
+        } catch (error) {
+          window.toolkityApp.showToast('Registration Failed', error.message, 'error');
+        } finally {
+          if (submitBtn) {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+          }
+        }
       });
     }
 
@@ -216,55 +248,26 @@ class AuthManager {
   }
 
   setupGoogleAuthModal() {
-    // Simulated Google One-Tap / Account Picker
+    // Google OAuth placeholder — will use real OAuth when GOOGLE_CLIENT_ID is set
     const googleAccounts = [
       {
-        name: "Alex Vance",
-        email: "alex.vance.web3@gmail.com",
-        avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80"
-      },
-      {
-        name: "Elena Rostova",
-        email: "elena.design.ai@gmail.com",
-        avatar: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&auto=format&fit=crop&q=80"
+        name: "Continue with Google",
+        email: "Select your Google account",
+        avatar: "https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
       }
     ];
 
     const listEl = document.getElementById('google-account-list');
     if (listEl) {
-      listEl.innerHTML = googleAccounts.map((acc, i) => `
-        <div class="google-account-item" data-index="${i}">
-          <img src="${acc.avatar}" alt="${acc.name}" class="google-account-avatar">
-          <div class="google-account-info">
-            <div class="google-account-name">${acc.name}</div>
-            <div class="google-account-email">${acc.email}</div>
+      listEl.innerHTML = `
+        <div class="google-account-item" style="justify-content: center; padding: 1.5rem;">
+          <div style="text-align: center;">
+            <div style="font-size: 2rem; margin-bottom: 0.5rem;">🔑</div>
+            <div style="font-weight: 700; color: var(--text-primary); margin-bottom: 0.25rem;">Google OAuth Coming Soon</div>
+            <div style="font-size: 0.8rem; color: var(--text-muted);">Please use email/password login for now.</div>
           </div>
         </div>
-      `).join('');
-
-      listEl.querySelectorAll('.google-account-item').forEach(item => {
-        item.addEventListener('click', () => {
-          const idx = parseInt(item.getAttribute('data-index'), 10);
-          const sel = googleAccounts[idx];
-          this.closeGoogleAuthModal();
-          this.closeLoginModal();
-          this.closeRegisterModal();
-
-          const username = sel.email.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '_');
-          this.login({
-            username: username,
-            name: sel.name,
-            email: sel.email,
-            avatar: sel.avatar
-          });
-
-          window.toolkityApp.showToast(
-            'Google Sign-In Successful',
-            `Welcome back, ${sel.name}! Logged in via Google OAuth.`,
-            'success'
-          );
-        });
-      });
+      `;
     }
 
     document.getElementById('google-auth-cancel')?.addEventListener('click', () => {
@@ -306,70 +309,44 @@ class AuthManager {
     this.closeGoogleAuthModal();
   }
 
-  login(details) {
-    const updated = {
-      ...this.user,
-      isLoggedIn: true,
-      username: details.username || this.user.username,
-      name: details.name || this.user.name,
-      email: details.email || this.user.email,
-      avatar: details.avatar || this.user.avatar
-    };
-    this.saveUserSession(updated);
-    this.closeAllAuthModals();
-    window.toolkityApp.showToast('Welcome Back!', `Signed in as @${updated.username}`, 'success');
-  }
-
-  register(details) {
-    const newUser = {
-      isLoggedIn: true,
-      username: details.username,
-      name: details.name,
-      email: details.email,
-      avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80",
-      balance: 10.00, // $10 free welcome balance credit
-      totalSpent: 0.00,
-      ordersCount: 0,
-      apiKey: "pk_live_" + Math.random().toString(36).substring(2, 12),
-      tier: "Standard",
-      timezone: "UTC - 05:00 (EST)"
-    };
-    this.saveUserSession(newUser);
-    this.closeAllAuthModals();
-    window.toolkityApp.showToast('Account Created!', `Welcome to Toolkity Global SMM! $10.00 Welcome Balance credited.`, 'success');
-  }
-
   logout() {
-    const loggedOut = {
-      ...this.user,
-      isLoggedIn: false
-    };
-    this.saveUserSession(loggedOut);
+    window.smmAPI.logout();
+    this.user = null;
+    this.setUser(null);
     window.toolkityApp.showToast('Signed Out', 'You have been successfully signed out.', 'info');
   }
 
+  /**
+   * Refresh user data from the API (after balance change, etc.)
+   */
+  async refreshUser() {
+    try {
+      const data = await window.smmAPI.getMe();
+      if (data && data.user) {
+        this.setUser({ ...data.user, isLoggedIn: true });
+      }
+    } catch (e) {
+      console.warn('[SMMTOOL] Failed to refresh user:', e.message);
+    }
+  }
+
   creditBalance(amountUSD) {
-    const current = this.user.balance || 0;
-    const newBal = current + amountUSD;
-    this.user.balance = parseFloat(newBal.toFixed(2));
-    this.saveUserSession(this.user);
+    // After API-based deposit confirmation, refresh from server
+    this.refreshUser();
   }
 
   deductBalance(amountUSD) {
-    const current = this.user.balance || 0;
-    if (current >= amountUSD) {
-      this.user.balance = parseFloat((current - amountUSD).toFixed(2));
-      this.user.totalSpent = parseFloat(((this.user.totalSpent || 0) + amountUSD).toFixed(2));
-      this.user.ordersCount = (this.user.ordersCount || 0) + 1;
-      this.saveUserSession(this.user);
-      return true;
-    }
-    return false;
+    // Balance deduction now happens server-side via /api/orders POST
+    // Refresh local state from server after order placement
+    this.refreshUser();
+    return true;
   }
 
   updateProfile(data) {
+    // Profile updates will be API-based in future
+    // For now, update local state
     this.user = { ...this.user, ...data };
-    this.saveUserSession(this.user);
+    this.setUser(this.user);
     window.toolkityApp.showToast('Profile Updated', 'Your username and account settings have been saved.', 'success');
   }
 }

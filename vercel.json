@@ -1,0 +1,52 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/**/*.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "index.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "admin/**",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "css/**",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "js/**",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "robots.txt",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "sitemap.xml",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/api/$1" },
+    { "src": "/admin/(.*)", "dest": "/admin/$1" },
+    { "src": "/css/(.*)", "dest": "/css/$1" },
+    { "src": "/js/(.*)", "dest": "/js/$1" },
+    { "src": "/robots.txt", "dest": "/robots.txt" },
+    { "src": "/sitemap.xml", "dest": "/sitemap.xml" },
+    { "src": "/(.*)", "dest": "/index.html" }
+  ],
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET, POST, PUT, DELETE, OPTIONS" },
+        { "key": "Access-Control-Allow-Headers", "value": "Content-Type, Authorization" }
+      ]
+    }
+  ]
+}

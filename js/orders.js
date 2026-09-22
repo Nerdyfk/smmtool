@@ -1,12 +1,13 @@
 /**
- * SMMTOOL Pro - Flagship New Order & Order History Controller
+ * SMMTOOL Pro — Orders Controller (API-backed)
  * Powers dynamic category/service selection, real-time USD cost calculation,
- * active/paused service enforcement, balance deduction, and live order tracking.
+ * API-based order placement with server-side balance deduction, and live order tracking.
  */
 
 class OrdersManager {
   constructor() {
-    this.orders = this.loadOrders();
+    this.orders = [];
+    this.services = [];
     this.selectedCategory = 'twitter';
     this.selectedServiceId = null;
     this.quantity = 1000;
@@ -14,7 +15,9 @@ class OrdersManager {
     this.init();
   }
 
-  init() {
+  async init() {
+    await this.loadServices();
+    await this.loadOrders();
     this.setupNewOrderForm();
     this.setupOrderHistoryView();
 
@@ -23,30 +26,95 @@ class OrdersManager {
     });
 
     window.addEventListener('services:updated', () => {
-      this.populateServicesForCategory();
+      this.loadServices().then(() => this.populateServicesForCategory());
     });
   }
 
-  loadOrders() {
+  /**
+   * Load services from API
+   */
+  async loadServices() {
     try {
-      const saved = localStorage.getItem('smmtool_user_orders') || localStorage.getItem('toolkity_user_orders');
-      if (saved) return JSON.parse(saved);
+      const data = await window.smmAPI.getServices();
+      if (data && data.services) {
+        this.services = data.services;
+        // Also update TOOLKITY_DATA for backward compatibility
+        if (window.TOOLKITY_DATA) {
+          window.TOOLKITY_DATA.smmServices = this.services.map(s => ({
+            id: s.serviceId,
+            platform: s.platform,
+            category: s.category,
+            name: s.name,
+            description: s.description,
+            ratePer1000: s.ratePer1k,
+            ratePer1k: s.ratePer1k,
+            min: s.minOrder,
+            max: s.maxOrder,
+            minOrder: s.minOrder,
+            maxOrder: s.maxOrder,
+            speed: s.speed,
+            status: s.status,
+            quality: s.quality,
+            refillDays: s.refillDays
+          }));
+        }
+      }
     } catch (e) {
-      console.error('Error loading orders:', e);
+      console.warn('[SMMTOOL] Failed to load services from API, using local data:', e.message);
+      // Fallback to TOOLKITY_DATA
+      if (window.TOOLKITY_DATA && window.TOOLKITY_DATA.smmServices) {
+        this.services = window.TOOLKITY_DATA.smmServices;
+      }
     }
-    return TOOLKITY_DATA.seedOrders || [];
   }
 
-  saveOrders() {
+  /**
+   * Load user's orders from API
+   */
+  async loadOrders() {
+    if (!window.smmAPI || !window.smmAPI.isLoggedIn()) {
+      this.orders = [];
+      return;
+    }
+
     try {
-      localStorage.setItem('smmtool_user_orders', JSON.stringify(this.orders));
+      const data = await window.smmAPI.getOrders();
+      if (data && data.orders) {
+        this.orders = data.orders.map(o => ({
+          id: o.orderId,
+          customer: o.customerUsername,
+          serviceName: o.serviceName,
+          platform: o.platform,
+          link: o.targetLink,
+          quantity: o.quantity,
+          charge: `$${o.charge.toFixed(2)}`,
+          status: o.status,
+          date: new Date(o.createdAt).toISOString().replace('T', ' ').substring(0, 16)
+        }));
+      }
     } catch (e) {
-      console.error('Error saving orders:', e);
+      console.warn('[SMMTOOL] Failed to load orders from API:', e.message);
+      this.orders = [];
     }
-    this.renderOrdersTable();
-    if (window.adminManager && typeof window.adminManager.renderOrdersTable === 'function') {
-      window.adminManager.renderOrdersTable();
+  }
+
+  getServicesList() {
+    // Return services in the format expected by the UI
+    if (this.services.length > 0) {
+      return this.services.map(s => ({
+        id: s.serviceId || s.id,
+        platform: s.platform,
+        category: s.category,
+        name: s.name,
+        description: s.description,
+        ratePer1000: s.ratePer1k || s.ratePer1000,
+        min: s.minOrder || s.min,
+        max: s.maxOrder || s.max,
+        speed: s.speed,
+        status: s.status
+      }));
     }
+    return (window.TOOLKITY_DATA?.smmServices || []);
   }
 
   setupNewOrderForm() {
@@ -100,9 +168,10 @@ class OrdersManager {
 
   populateServicesForCategory() {
     const serviceSelect = document.getElementById('new-order-service-select');
-    if (!serviceSelect || !TOOLKITY_DATA.smmServices) return;
+    if (!serviceSelect) return;
 
-    const filtered = TOOLKITY_DATA.smmServices.filter(s =>
+    const allServices = this.getServicesList();
+    const filtered = allServices.filter(s =>
       s.platform.toLowerCase() === this.selectedCategory.toLowerCase()
     );
 
@@ -114,7 +183,7 @@ class OrdersManager {
       return;
     }
 
-    // Group services by category/subcategory for clean user experience
+    // Group services by category
     const groups = {};
     filtered.forEach(s => {
       const cat = s.category || 'General Services';
@@ -127,7 +196,8 @@ class OrdersManager {
       html += `<optgroup label="${catName}">`;
       services.forEach(s => {
         const isPaused = s.status === 'paused';
-        const formattedRate = s.ratePer1000 < 0.1 ? s.ratePer1000.toFixed(3) : s.ratePer1000.toFixed(2);
+        const rate = s.ratePer1000 || s.ratePer1k;
+        const formattedRate = rate < 0.1 ? rate.toFixed(3) : rate.toFixed(2);
         html += `
           <option value="${s.id}" ${isPaused ? 'disabled' : ''}>
             #${s.id} - ${s.name} ${isPaused ? '⚠️ [PAUSED BY ADMIN]' : `— $${formattedRate} / 1k`}
@@ -153,7 +223,8 @@ class OrdersManager {
 
   selectServiceFromCatalog(serviceId) {
     const sId = parseInt(serviceId, 10);
-    const service = TOOLKITY_DATA.smmServices.find(s => s.id === sId);
+    const allServices = this.getServicesList();
+    const service = allServices.find(s => s.id === sId);
     if (!service) return;
 
     this.selectedCategory = service.platform.toLowerCase();
@@ -180,7 +251,8 @@ class OrdersManager {
   }
 
   updateServiceDetails() {
-    const service = TOOLKITY_DATA.smmServices.find(s => s.id === this.selectedServiceId);
+    const allServices = this.getServicesList();
+    const service = allServices.find(s => s.id === this.selectedServiceId);
     const box = document.getElementById('new-order-service-details-box');
     if (!box) return;
 
@@ -190,18 +262,19 @@ class OrdersManager {
     }
 
     const isPaused = service.status === 'paused';
-    const formattedRate = service.ratePer1000 < 0.1 ? service.ratePer1000.toFixed(3) : service.ratePer1000.toFixed(2);
+    const rate = service.ratePer1000 || service.ratePer1k;
+    const formattedRate = rate < 0.1 ? rate.toFixed(3) : rate.toFixed(2);
     box.style.display = 'block';
     box.innerHTML = `
       <div class="service-detail-item">
         <strong>Service:</strong> #${service.id} - ${service.name} ${isPaused ? '<span class="status-badge paused" style="margin-left: 0.5rem;">PAUSED</span>' : ''}
       </div>
       <div class="service-detail-item">
-        <strong>Description:</strong> ${service.description}
+        <strong>Description:</strong> ${service.description || 'N/A'}
       </div>
       <div class="service-detail-meta-grid">
         <div><strong>Rate / 1k:</strong> <span style="color: var(--color-emerald); font-weight:800;">$${formattedRate} USD</span></div>
-        <div><strong>Min / Max:</strong> ${service.min.toLocaleString()} / ${service.max.toLocaleString()}</div>
+        <div><strong>Min / Max:</strong> ${(service.min || service.minOrder || 100).toLocaleString()} / ${(service.max || service.maxOrder || 100000).toLocaleString()}</div>
         <div><strong>Speed:</strong> ${service.speed}</div>
         <div><strong>Status:</strong> <span style="color: ${isPaused ? 'var(--color-amber)' : 'var(--color-emerald)'}; font-weight: 800;">${isPaused ? 'Paused' : 'Active'}</span></div>
       </div>
@@ -209,14 +282,15 @@ class OrdersManager {
 
     const qtyInput = document.getElementById('new-order-quantity-input');
     if (qtyInput) {
-      qtyInput.min = service.min || 100;
-      qtyInput.max = service.max || 100000;
+      qtyInput.min = service.min || service.minOrder || 100;
+      qtyInput.max = service.max || service.maxOrder || 100000;
       qtyInput.step = 100;
     }
   }
 
   calculateTotalCharge() {
-    const service = TOOLKITY_DATA.smmServices.find(s => s.id === this.selectedServiceId);
+    const allServices = this.getServicesList();
+    const service = allServices.find(s => s.id === this.selectedServiceId);
     const chargeDisplay = document.getElementById('new-order-calculated-charge');
     if (!chargeDisplay) return;
 
@@ -225,7 +299,8 @@ class OrdersManager {
       return;
     }
 
-    const cost = (this.quantity / 1000) * service.ratePer1000;
+    const rate = service.ratePer1000 || service.ratePer1k;
+    const cost = (this.quantity / 1000) * rate;
     const finalCost = Math.max(0.001, cost);
     const displayCost = finalCost < 0.1 ? finalCost.toFixed(3) : finalCost.toFixed(2);
     chargeDisplay.textContent = `$${displayCost} USD`;
@@ -253,8 +328,9 @@ class OrdersManager {
     }
   }
 
-  submitNewOrder() {
-    const service = TOOLKITY_DATA.smmServices.find(s => s.id === this.selectedServiceId);
+  async submitNewOrder() {
+    const allServices = this.getServicesList();
+    const service = allServices.find(s => s.id === this.selectedServiceId);
     const linkInput = document.getElementById('new-order-link-input');
     const link = (linkInput?.value || '').trim();
 
@@ -264,7 +340,7 @@ class OrdersManager {
     }
 
     if (service.status === 'paused') {
-      window.toolkityApp?.showToast('Service Paused', 'This service is currently paused for provider maintenance. Please pick another active service.', 'warning');
+      window.toolkityApp?.showToast('Service Paused', 'This service is currently paused. Please pick another active service.', 'warning');
       return;
     }
 
@@ -274,111 +350,78 @@ class OrdersManager {
       return;
     }
 
-    const cost = (this.quantity / 1000) * service.ratePer1000;
-    const finalCost = Math.max(0.001, cost);
-    const formattedCost = finalCost < 0.1 ? finalCost.toFixed(3) : finalCost.toFixed(2);
-
     // Check if user is logged in
     if (!window.authManager || !window.authManager.user || !window.authManager.user.isLoggedIn) {
-      window.toolkityApp?.showToast('Sign In Required', 'Please sign in or register to dispatch orders from account balance.', 'info');
-      window.authManager.openLoginModal();
+      window.toolkityApp?.showToast('Sign In Required', 'Please sign in or register to place orders.', 'info');
+      window.authManager?.openLoginModal();
       return;
     }
 
-    // Try deducting balance
-    const success = window.authManager.deductBalance(finalCost);
+    const rate = service.ratePer1000 || service.ratePer1k;
+    const cost = (this.quantity / 1000) * rate;
+    const finalCost = Math.max(0.001, cost);
 
-    if (!success) {
+    // Check balance locally first for UX
+    if ((window.authManager.user.balance || 0) < finalCost) {
       window.toolkityApp?.showToast(
         'Insufficient Balance',
-        `Order cost is $${formattedCost} USD, but your balance is $${window.authManager.user.balance.toFixed(2)} USD. Please deposit funds via Bangla QR or Crypto.`,
+        `Order cost is $${finalCost.toFixed(2)} USD, but your balance is $${window.authManager.user.balance.toFixed(2)} USD. Please deposit funds.`,
         'warning'
       );
       window.toolkityApp?.switchView('add-funds');
       return;
     }
 
-    // Generate Order Record
-    const newOrderId = "ORD-" + Math.floor(1000 + Math.random() * 9000);
-    const orderRecord = {
-      id: newOrderId,
-      customer: window.authManager.user.username || 'global_builder',
-      serviceName: service.name,
-      platform: service.platform,
-      link: link,
-      quantity: this.quantity,
-      charge: `$${formattedCost}`,
-      status: "In Progress",
-      date: new Date().toISOString().replace('T', ' ').substring(0, 16)
-    };
+    // Submit order via API
+    const submitBtn = document.querySelector('#new-order-form button[type="submit"]');
+    const originalText = submitBtn ? submitBtn.innerHTML : '';
+    if (submitBtn) {
+      submitBtn.innerHTML = '<span>⏳</span> <span>Placing order...</span>';
+      submitBtn.disabled = true;
+    }
 
-    this.orders.unshift(orderRecord);
-    this.saveOrders();
-
-    // Instant Admin Email Notification Dispatch
-    this.dispatchAdminEmailNotification(orderRecord);
-
-    if (linkInput) linkInput.value = '';
-
-    window.toolkityApp?.showToast(
-      'Order Placed Successfully!',
-      `Order #${newOrderId} confirmed! Charge: $${formattedCost} USD. SMMTOOL automated API execution started.`,
-      'success'
-    );
-
-    // Switch to order history to view
-    window.toolkityApp?.switchView('orders-history');
-  }
-
-  dispatchAdminEmailNotification(orderRecord) {
     try {
-      const emailSettings = JSON.parse(localStorage.getItem('smmtool_admin_email_settings') || '{}');
-      const adminEmail = emailSettings.email || localStorage.getItem('smmtool_admin_email') || 'admin@smmtool.pro';
-      const notificationsEnabled = emailSettings.notifyOnOrders !== false;
+      const data = await window.smmAPI.placeOrder(service.id, this.quantity, link);
 
-      if (!notificationsEnabled) return;
-
-      const alertItem = {
-        id: 'ALT-' + Math.floor(100000 + Math.random() * 900000),
-        type: 'NEW_ORDER',
-        recipient: adminEmail,
-        orderId: orderRecord.id,
-        customer: orderRecord.customer,
-        service: orderRecord.serviceName,
-        platform: orderRecord.platform,
-        quantity: orderRecord.quantity,
-        charge: orderRecord.charge,
-        link: orderRecord.link,
-        date: new Date().toISOString().replace('T', ' ').substring(0, 19),
-        status: 'Delivered',
-        subject: `⚡ [NEW ORDER ALERT] #${orderRecord.id} (${orderRecord.charge}) by @${orderRecord.customer}`
-      };
-
-      // Save to admin alerts log
-      const existingAlerts = JSON.parse(localStorage.getItem('smmtool_admin_alerts') || '[]');
-      existingAlerts.unshift(alertItem);
-      localStorage.setItem('smmtool_admin_alerts', JSON.stringify(existingAlerts.slice(0, 100)));
-
-      // Optional external webhook dispatch (e.g. Discord, Telegram, or Email API)
-      if (emailSettings.webhookUrl && emailSettings.webhookUrl.startsWith('http')) {
-        fetch(emailSettings.webhookUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(alertItem)
-        }).catch(err => console.warn('Admin webhook dispatch error:', err));
+      // Update user data from API response
+      if (data.user) {
+        window.authManager.setUser({ ...data.user, isLoggedIn: true });
       }
 
-      // Trigger Web Notification if granted
-      if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-        new Notification(`SMMTOOL New Order: ${orderRecord.id}`, {
-          body: `${orderRecord.serviceName} - ${orderRecord.charge} from @${orderRecord.customer}`,
-          icon: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=100'
+      // Add to local orders list
+      if (data.order) {
+        this.orders.unshift({
+          id: data.order.orderId,
+          customer: data.order.customerUsername,
+          serviceName: data.order.serviceName,
+          platform: data.order.platform,
+          link: data.order.targetLink,
+          quantity: data.order.quantity,
+          charge: `$${data.order.charge.toFixed(2)}`,
+          status: data.order.status,
+          date: new Date(data.order.createdAt).toISOString().replace('T', ' ').substring(0, 16)
         });
       }
 
-      console.log(`[Admin Dispatch] Instant Order Notification routed to Admin Email: ${adminEmail}`);
-    } catch (e) {
-      console.error('Error dispatching admin notification:', e);
+      this.renderOrdersTable();
+
+      if (linkInput) linkInput.value = '';
+
+      window.toolkityApp?.showToast(
+        'Order Placed Successfully!',
+        data.message || `Order confirmed! SMMTOOL automated API execution started.`,
+        'success'
+      );
+
+      // Switch to order history
+      window.toolkityApp?.switchView('orders-history');
+    } catch (error) {
+      window.toolkityApp?.showToast('Order Failed', error.message, 'error');
+    } finally {
+      if (submitBtn) {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+      }
     }
   }
 
