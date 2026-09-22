@@ -24,7 +24,7 @@ class CryptoPaymentModal {
     this.setupFollowerControls();
     this.setupCoinTabs();
     this.setupActions();
-    this.updatePaymentDetails();
+    // Lazy-load QR on modal open (0ms page load impact)
   }
 
   setupServiceSelector() {

@@ -11,12 +11,21 @@ class AuthManager {
     this.init();
   }
 
-  async init() {
-    await this.restoreSession();
+  init() {
     this.setupAuthModals();
     this.renderTopBarAuth();
     this.setupGoogleAuthModal();
     this.isLoading = false;
+
+    // Validate/restore session in background non-blockingly
+    if (window.smmAPI && window.smmAPI.isLoggedIn()) {
+      this.restoreSession().then(() => {
+        this.renderTopBarAuth();
+        if (this.user) {
+          window.dispatchEvent(new CustomEvent('auth:updated', { detail: this.user }));
+        }
+      });
+    }
   }
 
   /**

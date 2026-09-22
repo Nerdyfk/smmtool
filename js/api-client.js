@@ -64,12 +64,18 @@ class SMMToolAPI {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
+    const controller = new AbortController();
+    const timeoutMs = options.timeout || 3500;
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
     try {
       const response = await fetch(url, {
         ...options,
+        signal: controller.signal,
         headers,
         body: options.body ? JSON.stringify(options.body) : undefined
       });
+      clearTimeout(timeoutId);
 
       const data = await response.json();
 
@@ -79,6 +85,10 @@ class SMMToolAPI {
 
       return data;
     } catch (error) {
+      clearTimeout(timeoutId);
+      if (error.name === 'AbortError') {
+        throw new Error('Request timed out. Using fast local cache.');
+      }
       if (error.message === 'Failed to fetch') {
         throw new Error('Network error. Please check your internet connection.');
       }

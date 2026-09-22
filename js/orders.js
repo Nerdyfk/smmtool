@@ -15,14 +15,21 @@ class OrdersManager {
     this.init();
   }
 
-  async init() {
-    await this.loadServices();
-    await this.loadOrders();
+  init() {
+    // 1. Immediately hydrate services from local seed data for 0ms instantaneous UI render
+    if (window.TOOLKITY_DATA && window.TOOLKITY_DATA.smmServices) {
+      this.services = window.TOOLKITY_DATA.smmServices;
+    }
     this.setupNewOrderForm();
     this.setupOrderHistoryView();
 
+    // 2. Load API updates in the background non-blockingly
+    this.loadServices().then(() => this.populateServicesForCategory());
+    this.loadOrders().then(() => this.renderOrdersTable());
+
     window.addEventListener('auth:updated', () => {
       this.updateBalanceIndicator();
+      this.loadOrders().then(() => this.renderOrdersTable());
     });
 
     window.addEventListener('services:updated', () => {

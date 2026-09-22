@@ -226,10 +226,14 @@ class WalletManager {
       // Generate Authentic Bangladesh Bank Bangla QR
       if (qrContainer && typeof window.generateBanglaQRSVG === 'function') {
         const payload = `00020101021226580014BD.BANGK.010102100000000000520459995305050005802BD5910SMMTOOL BD6005DHAKA540${bdtAmount.toString().length}${bdtAmount}6304`;
-        qrContainer.innerHTML = window.generateBanglaQRSVG(payload, {
-          amountBDT: bdtAmount.toString(),
-          merchantName: bank.accountName || "SMMTOOL Technologies Ltd"
-        });
+        const qrKey = 'bangla:' + payload;
+        if (qrContainer.dataset.renderedKey !== qrKey) {
+          qrContainer.innerHTML = window.generateBanglaQRSVG(payload, {
+            amountBDT: bdtAmount.toString(),
+            merchantName: bank.accountName || "SMMTOOL Technologies Ltd"
+          });
+          qrContainer.dataset.renderedKey = qrKey;
+        }
       }
 
       // Update payment instructions UI
@@ -275,11 +279,15 @@ class WalletManager {
       if (addressEl) addressEl.textContent = payId;
 
       if (qrContainer && typeof window.generateQRCodeSVG === 'function') {
-        qrContainer.innerHTML = window.generateQRCodeSVG(payId, {
-          showCenterBadge: true,
-          tokenSymbol: 'USDT',
-          chainBadge: isBinance ? 'BNB Chain' : 'Base'
-        });
+        const qrKey = 'ex:' + payId + ':' + (isBinance ? 'binance-pay' : this.selectedExchange);
+        if (qrContainer.dataset.renderedKey !== qrKey) {
+          qrContainer.innerHTML = window.generateQRCodeSVG(payId, {
+            showCenterBadge: true,
+            tokenSymbol: 'USDT',
+            chainBadge: isBinance ? 'binance-pay' : (isBybit ? 'bybit-pay' : 'Base')
+          });
+          qrContainer.dataset.renderedKey = qrKey;
+        }
       }
 
       const verifyBtn = document.getElementById('btn-wallet-verify-tx');
@@ -312,13 +320,17 @@ class WalletManager {
     if (addressEl) addressEl.textContent = this.receiverAddress;
 
     if (qrContainer && typeof window.generateQRCodeSVG === 'function') {
-      qrContainer.innerHTML = window.generateQRCodeSVG(this.receiverAddress, {
-        showCenterBadge: true,
-        tokenSymbol: wallet.symbol,
-        chainBadge: wallet.chain,
-        darkColor: '#0f172a',
-        lightColor: '#ffffff'
-      });
+      const qrKey = 'evm:' + this.receiverAddress + ':' + wallet.chain + ':' + wallet.symbol;
+      if (qrContainer.dataset.renderedKey !== qrKey) {
+        qrContainer.innerHTML = window.generateQRCodeSVG(this.receiverAddress, {
+          showCenterBadge: true,
+          tokenSymbol: wallet.symbol,
+          chainBadge: wallet.chain,
+          darkColor: '#0f172a',
+          lightColor: '#ffffff'
+        });
+        qrContainer.dataset.renderedKey = qrKey;
+      }
     }
 
     const verifyBtn = document.getElementById('btn-wallet-verify-tx');
