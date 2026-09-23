@@ -500,7 +500,7 @@ class AuthManager {
             username: cleanHandle,
             email: emailVal,
             password: passwordVal,
-            balance: 10.00, // $10 welcome balance bonus
+            balance: 0.00,
             avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${cleanHandle}&backgroundColor=b6e3f4`,
             tier: "Standard",
             createdAt: new Date().toISOString()
@@ -586,13 +586,13 @@ class AuthManager {
                 username: autoUsername,
                 email: emailVal,
                 password: passwordVal,
-                balance: 10.00,
+                balance: 0.00,
                 avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${autoUsername}&backgroundColor=b6e3f4`,
                 tier: "Standard"
               };
               this.saveAccount(createdAcc);
               this.login(createdAcc);
-              window.toolkityApp.showToast('Account Created & Signed In', `Welcome, ${autoName}! $10.00 Welcome Balance credited.`, 'success');
+              window.toolkityApp.showToast('Account Created & Signed In', `Welcome, ${autoName}! Your account is ready.`, 'success');
             } else {
               emailBox?.classList.add('input-error', 'shake');
               this.showAuthFeedback('No account found with this email. Switch to "Register now" to sign up.', 'error');
@@ -902,7 +902,7 @@ class AuthManager {
       name: details.name,
       email: details.email,
       avatar: details.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80",
-      balance: details.balance !== undefined ? details.balance : 10.00, // $10 free welcome balance credit
+      balance: details.balance !== undefined ? details.balance : 0.00,
       totalSpent: 0.00,
       ordersCount: 0,
       apiKey: "pk_live_" + Math.random().toString(36).substring(2, 12),
@@ -912,7 +912,7 @@ class AuthManager {
     };
     this.saveUserSession(newUser);
     this.closeAllAuthModals();
-    window.toolkityApp.showToast('Account Created!', `Welcome to SMMTOOL! $10.00 Welcome Balance credited to your account.`, 'success');
+    window.toolkityApp.showToast('Account Created!', `Welcome to SMMTOOL! Your account has been registered successfully.`, 'success');
   }
 
   logout() {
