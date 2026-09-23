@@ -3,6 +3,7 @@ import path from 'path';
 import {defineConfig} from 'vite';
 
 export default defineConfig(() => {
+  const rootDir = import.meta.dirname || process.cwd();
   return {
     server: {
       host: '0.0.0.0',
@@ -13,8 +14,8 @@ export default defineConfig(() => {
     build: {
       rollupOptions: {
         input: {
-          main: path.resolve(__dirname, 'index.html'),
-          admin: path.resolve(__dirname, 'admin.html'),
+          main: path.resolve(rootDir, 'index.html'),
+          admin: path.resolve(rootDir, 'admin.html'),
         },
       },
     },
@@ -22,16 +23,16 @@ export default defineConfig(() => {
       {
         name: 'copy-static-assets',
         closeBundle() {
-          const distDir = path.resolve(__dirname, 'dist');
+          const distDir = path.resolve(rootDir, 'dist');
           for (const dir of ['js', 'css', 'admin']) {
-            const src = path.resolve(__dirname, dir);
+            const src = path.resolve(rootDir, dir);
             const dest = path.resolve(distDir, dir);
             if (fs.existsSync(src)) {
               fs.cpSync(src, dest, { recursive: true });
             }
           }
           for (const file of ['robots.txt', 'sitemap.xml']) {
-            const src = path.resolve(__dirname, file);
+            const src = path.resolve(rootDir, file);
             const dest = path.resolve(distDir, file);
             if (fs.existsSync(src)) {
               fs.copyFileSync(src, dest);
