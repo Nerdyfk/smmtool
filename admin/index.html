@@ -384,6 +384,8 @@
                   </tbody>
                 </table>
               </div>
+              <!-- Orders Client-side Pagination & Virtualized Slicing Controls -->
+              <div id="admin-orders-pagination" class="admin-table-pagination"></div>
             </div>
           </div>
 
@@ -399,13 +401,22 @@
                     Review drop complaints, refill requests, and TrxID deposits. Click 'Inspect & Reply' to respond and issue refunds.
                   </p>
                 </div>
-                <select class="service-select-dropdown" id="admin-tickets-status-filter" style="width: auto; padding: 0.45rem 0.75rem; font-size: 0.82rem;">
-                  <option value="all">All Tickets</option>
-                  <option value="Open">Open</option>
-                  <option value="In Review">In Review</option>
-                  <option value="Resolved">Resolved</option>
-                  <option value="Closed">Closed</option>
-                </select>
+                <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                  <div class="input-with-icon" style="min-width: 220px; position: relative;">
+                    <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); font-size: 0.8rem; color: var(--text-muted);"></i>
+                    <input type="text" class="form-input" id="admin-tickets-search" placeholder="Search ticket ID, @user, subject..." style="padding-left: 2.2rem; font-size: 0.8rem; height: 36px;">
+                  </div>
+                  <select class="service-select-dropdown" id="admin-tickets-status-filter" style="width: auto; padding: 0.45rem 0.75rem; font-size: 0.82rem; height: 36px;">
+                    <option value="all">All Statuses</option>
+                    <option value="Open">Open</option>
+                    <option value="In Review">In Review</option>
+                    <option value="Resolved">Resolved</option>
+                    <option value="Closed">Closed</option>
+                  </select>
+                  <span id="admin-tickets-count-badge" style="font-size: 0.75rem; font-weight: 700; color: var(--color-twitter); background: rgba(56, 189, 248, 0.12); padding: 0.35rem 0.65rem; border-radius: 6px; border: 1px solid rgba(56, 189, 248, 0.25);">
+                    0 Tickets
+                  </span>
+                </div>
               </div>
 
               <div class="orders-table-wrapper" style="max-height: 520px; overflow-y: auto;">
@@ -427,6 +438,8 @@
                   </tbody>
                 </table>
               </div>
+              <!-- Tickets Client-side Pagination & Virtualized Slicing Controls -->
+              <div id="admin-tickets-pagination" class="admin-table-pagination"></div>
             </div>
           </div>
 

@@ -23,6 +23,14 @@ class AdminManager {
     this.alerts = this.loadAlerts();
     this.activeTab = 'services'; // services | orders | tickets | gateways | alerts
 
+    // Client-side pagination & virtualized rendering state
+    this.ordersPage = 1;
+    this.ordersPageSize = 25;
+    this.ticketsPage = 1;
+    this.ticketsPageSize = 25;
+    this.ticketsStatusFilter = 'all';
+    this.ticketsSearchQuery = '';
+
     this.adminTokenKey = 'smmtool_admin_token';
     this.adminSessionKey = 'smmtool_admin_session';
     this.apiBaseUrl = '/api';
@@ -631,6 +639,107 @@ class AdminManager {
     return null;
   }
 
+  setOrdersPage(page) {
+    this.ordersPage = Math.max(1, page);
+    this.renderOrdersTable();
+  }
+
+  setOrdersPageSize(size) {
+    this.ordersPageSize = parseInt(size, 10) || 25;
+    this.ordersPage = 1;
+    this.renderOrdersTable();
+  }
+
+  setTicketsPage(page) {
+    this.ticketsPage = Math.max(1, page);
+    this.renderTicketsTable();
+  }
+
+  setTicketsPageSize(size) {
+    this.ticketsPageSize = parseInt(size, 10) || 25;
+    this.ticketsPage = 1;
+    this.renderTicketsTable();
+  }
+
+  renderPaginationControls({ containerId, currentPage, pageSize, totalItems, onPageChange, onPageSizeChange }) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    if (totalItems <= 0) {
+      container.innerHTML = '';
+      container.style.display = 'none';
+      return;
+    }
+
+    container.style.display = 'flex';
+    const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+    const startItem = Math.min((currentPage - 1) * pageSize + 1, totalItems);
+    const endItem = Math.min(currentPage * pageSize, totalItems);
+
+    const pages = [];
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      if (currentPage > 4) {
+        pages.push('...');
+      }
+      const start = Math.max(2, currentPage - 1);
+      const end = Math.min(totalPages - 1, currentPage + 1);
+      for (let i = start; i <= end; i++) {
+        if (!pages.includes(i)) pages.push(i);
+      }
+      if (currentPage < totalPages - 3) {
+        pages.push('...');
+      }
+      if (!pages.includes(totalPages)) {
+        pages.push(totalPages);
+      }
+    }
+
+    const pagesHtml = pages.map(p => {
+      if (p === '...') {
+        return `<span class="pagination-ellipsis">…</span>`;
+      }
+      const isActive = p === currentPage;
+      return `<button type="button" class="pagination-btn ${isActive ? 'active' : ''}" onclick="${onPageChange}(${p})" ${isActive ? 'disabled' : ''}>${p}</button>`;
+    }).join('');
+
+    const pageSizeOptions = [10, 25, 50, 100];
+    const selectOptionsHtml = pageSizeOptions.map(sz => `
+      <option value="${sz}" ${sz === pageSize ? 'selected' : ''}>${sz}</option>
+    `).join('');
+
+    container.innerHTML = `
+      <div class="pagination-left">
+        <span class="pagination-info">
+          Showing <strong>${startItem.toLocaleString()}</strong>–<strong>${endItem.toLocaleString()}</strong> of <strong>${totalItems.toLocaleString()}</strong> records
+        </span>
+        <label class="pagination-per-page">
+          <span>Per page:</span>
+          <select class="pagination-per-page-select" onchange="${onPageSizeChange}(this.value)">
+            ${selectOptionsHtml}
+          </select>
+        </label>
+      </div>
+      <div class="pagination-controls">
+        <button type="button" class="pagination-btn" onclick="${onPageChange}(1)" ${currentPage === 1 ? 'disabled' : ''} title="First Page">
+          «
+        </button>
+        <button type="button" class="pagination-btn" onclick="${onPageChange}(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} title="Previous Page">
+          ‹
+        </button>
+        ${pagesHtml}
+        <button type="button" class="pagination-btn" onclick="${onPageChange}(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} title="Next Page">
+          ›
+        </button>
+        <button type="button" class="pagination-btn" onclick="${onPageChange}(${totalPages})" ${currentPage === totalPages ? 'disabled' : ''} title="Last Page">
+          »
+        </button>
+      </div>
+    `;
+  }
+
   renderOrdersTable(filter = null) {
     const tbody = document.getElementById('admin-orders-tbody');
     if (!tbody) return;
@@ -730,7 +839,14 @@ class AdminManager {
       countBadge.textContent = `${filtered.length} of ${orders.length} Orders`;
     }
 
-    if (filtered.length === 0) {
+    const totalOrders = filtered.length;
+    const totalPages = Math.max(1, Math.ceil(totalOrders / this.ordersPageSize));
+    if (this.ordersPage > totalPages) this.ordersPage = totalPages;
+    if (this.ordersPage < 1) this.ordersPage = 1;
+
+    const paginationContainer = document.getElementById('admin-orders-pagination');
+
+    if (totalOrders === 0) {
       let filterDesc = [];
       if (statusFilter !== 'all') filterDesc.push(`status "${statusFilter}"`);
       if (dateFilter !== 'all') {
@@ -757,10 +873,17 @@ class AdminManager {
           </td>
         </tr>
       `;
+      if (paginationContainer) {
+        paginationContainer.innerHTML = '';
+        paginationContainer.style.display = 'none';
+      }
       return;
     }
 
-    tbody.innerHTML = filtered.map(o => `
+    const startIndex = (this.ordersPage - 1) * this.ordersPageSize;
+    const pageOrders = filtered.slice(startIndex, startIndex + this.ordersPageSize);
+
+    tbody.innerHTML = pageOrders.map(o => `
       <tr>
         <td style="font-family: var(--font-mono); font-size: 0.8rem; font-weight: 800; color: var(--color-twitter);">${o.id}</td>
         <td>
@@ -784,6 +907,15 @@ class AdminManager {
         <td style="font-size: 0.72rem; color: var(--text-muted); white-space: nowrap;">${o.date || 'Just now'}</td>
       </tr>
     `).join('');
+
+    this.renderPaginationControls({
+      containerId: 'admin-orders-pagination',
+      currentPage: this.ordersPage,
+      pageSize: this.ordersPageSize,
+      totalItems: totalOrders,
+      onPageChange: 'window.adminManager.setOrdersPage',
+      onPageSizeChange: 'window.adminManager.setOrdersPageSize'
+    });
   }
 
   changeOrderStatus(orderId, newStatus) {
@@ -822,26 +954,78 @@ class AdminManager {
   // 3. SUPPORT TICKETS RESOLVER
   // ==========================================
 
-  renderTicketsTable(filter = 'all') {
+  renderTicketsTable(filter = null) {
     const tbody = document.getElementById('admin-tickets-tbody');
     if (!tbody) return;
 
-    const filtered = filter === 'all' ? this.tickets : this.tickets.filter(t => t.status.toLowerCase().replace(/\s+/g, '-') === filter.toLowerCase());
+    if (filter !== null) {
+      this.ticketsStatusFilter = filter;
+      const statusDropdown = document.getElementById('admin-tickets-status-filter');
+      if (statusDropdown && statusDropdown.value !== filter) {
+        statusDropdown.value = filter;
+      }
+    }
 
-    if (filtered.length === 0) {
+    const currentStatus = this.ticketsStatusFilter || document.getElementById('admin-tickets-status-filter')?.value || 'all';
+    const searchQuery = (this.ticketsSearchQuery || document.getElementById('admin-tickets-search')?.value || '').trim().toLowerCase();
+    const countBadge = document.getElementById('admin-tickets-count-badge');
+
+    const filtered = this.tickets.filter(t => {
+      // 1. Status Filter
+      if (currentStatus !== 'all') {
+        const normStatus = (t.status || '').toLowerCase().replace(/\s+/g, '-');
+        const normFilter = currentStatus.toLowerCase().replace(/\s+/g, '-');
+        if (normStatus !== normFilter) return false;
+      }
+
+      // 2. Search Query Filter
+      if (searchQuery) {
+        const idMatch = (t.id || '').toLowerCase().includes(searchQuery);
+        const userMatch = (t.username || '').toLowerCase().includes(searchQuery);
+        const emailMatch = (t.email || '').toLowerCase().includes(searchQuery);
+        const subjMatch = (t.subject || '').toLowerCase().includes(searchQuery);
+        const catMatch = (t.category || '').toLowerCase().includes(searchQuery);
+        const orderMatch = (t.orderId || '').toLowerCase().includes(searchQuery);
+        if (!idMatch && !userMatch && !emailMatch && !subjMatch && !catMatch && !orderMatch) return false;
+      }
+
+      return true;
+    });
+
+    if (countBadge) {
+      countBadge.textContent = `${filtered.length} of ${this.tickets.length} Tickets`;
+    }
+
+    const totalTickets = filtered.length;
+    const totalPages = Math.max(1, Math.ceil(totalTickets / this.ticketsPageSize));
+    if (this.ticketsPage > totalPages) this.ticketsPage = totalPages;
+    if (this.ticketsPage < 1) this.ticketsPage = 1;
+
+    const paginationContainer = document.getElementById('admin-tickets-pagination');
+
+    if (totalTickets === 0) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="7" style="text-align: center; padding: 2rem; color: var(--text-muted);">
-            No support tickets under '${filter}'.
+          <td colspan="8" style="text-align: center; padding: 2.5rem 1rem; color: var(--text-muted);">
+            <div style="font-size: 1.75rem; margin-bottom: 0.5rem;">🎫</div>
+            <div style="font-size: 0.95rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.25rem;">No support tickets found</div>
+            <div style="font-size: 0.8rem;">No tickets matching your status or search query.</div>
           </td>
         </tr>
       `;
+      if (paginationContainer) {
+        paginationContainer.innerHTML = '';
+        paginationContainer.style.display = 'none';
+      }
       return;
     }
 
-    tbody.innerHTML = filtered.map(t => {
-      const statusClass = t.status.toLowerCase().replace(/\s+/g, '-');
-      const priorityClass = t.priority.toLowerCase();
+    const startIndex = (this.ticketsPage - 1) * this.ticketsPageSize;
+    const pageTickets = filtered.slice(startIndex, startIndex + this.ticketsPageSize);
+
+    tbody.innerHTML = pageTickets.map(t => {
+      const statusClass = (t.status || 'open').toLowerCase().replace(/\s+/g, '-');
+      const priorityClass = (t.priority || 'medium').toLowerCase();
       return `
         <tr>
           <td style="font-family: var(--font-mono); font-size: 0.8rem; font-weight: 800; color: var(--color-twitter);">${t.id}</td>
@@ -851,7 +1035,10 @@ class AdminManager {
           </td>
           <td>
             <div style="font-weight: 700; color: var(--text-primary); font-size: 0.84rem;">${t.subject}</div>
-            <div style="font-size: 0.72rem; color: var(--text-muted);">Category: ${t.category} • Ref: ${t.orderId || 'None'}</div>
+            <div style="font-size: 0.72rem; color: var(--text-muted);">Ref: ${t.orderId || 'None'}</div>
+          </td>
+          <td>
+            <span style="font-size: 0.75rem; color: var(--text-secondary); background: var(--bg-surface-elevated); padding: 0.2rem 0.5rem; border-radius: 4px; border: 1px solid var(--border-subtle);">${t.category}</span>
           </td>
           <td>
             <span class="ticket-priority-pill ${priorityClass}">${t.priority}</span>
@@ -868,6 +1055,15 @@ class AdminManager {
         </tr>
       `;
     }).join('');
+
+    this.renderPaginationControls({
+      containerId: 'admin-tickets-pagination',
+      currentPage: this.ticketsPage,
+      pageSize: this.ticketsPageSize,
+      totalItems: totalTickets,
+      onPageChange: 'window.adminManager.setTicketsPage',
+      onPageSizeChange: 'window.adminManager.setTicketsPageSize'
+    });
   }
 
   openTicketReplyModal(ticketId) {
@@ -1114,7 +1310,10 @@ class AdminManager {
     const ordersEndDate = document.getElementById('admin-orders-end-date');
     const ordersResetBtn = document.getElementById('admin-orders-reset-filters');
 
-    const triggerOrdersFilter = () => this.renderOrdersTable();
+    const triggerOrdersFilter = () => {
+      this.ordersPage = 1;
+      this.renderOrdersTable();
+    };
 
     if (ordersSearch) ordersSearch.addEventListener('input', triggerOrdersFilter);
     if (ordersStatusFilter) ordersStatusFilter.addEventListener('change', triggerOrdersFilter);
@@ -1131,13 +1330,29 @@ class AdminManager {
         if (ordersEndDate) ordersEndDate.value = '';
         const customContainer = document.getElementById('admin-orders-custom-dates');
         if (customContainer) customContainer.style.display = 'none';
+        this.ordersPage = 1;
         this.renderOrdersTable();
       });
     }
 
-    // Tickets Filter
+    // Tickets Search & Status Filter
+    const ticketsSearch = document.getElementById('admin-tickets-search');
+    if (ticketsSearch) {
+      ticketsSearch.addEventListener('input', (e) => {
+        this.ticketsSearchQuery = e.target.value;
+        this.ticketsPage = 1;
+        this.renderTicketsTable();
+      });
+    }
+
     const ticketsStatusFilter = document.getElementById('admin-tickets-status-filter');
-    if (ticketsStatusFilter) ticketsStatusFilter.addEventListener('change', (e) => this.renderTicketsTable(e.target.value));
+    if (ticketsStatusFilter) {
+      ticketsStatusFilter.addEventListener('change', (e) => {
+        this.ticketsStatusFilter = e.target.value;
+        this.ticketsPage = 1;
+        this.renderTicketsTable(e.target.value);
+      });
+    }
 
     // Close Ticket Modal Button
     const btnCloseTicketModal = document.getElementById('btn-close-ticket-modal');
