@@ -6,8 +6,8 @@
  */
 
 const bcrypt = require('bcryptjs');
-const { connectToDatabase } = require('../_lib/db');
-const { generateToken, handleCors } = require('../_lib/auth');
+const { connectToDatabase } = require('../../_lib/db');
+const { generateToken, handleCors } = require('../../_lib/auth');
 
 module.exports = async function handler(req, res) {
   if (handleCors(req, res)) return;

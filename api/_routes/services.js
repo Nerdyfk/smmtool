@@ -4,8 +4,8 @@
  * No authentication required.
  */
 
-const { connectToDatabase, seedServicesIfEmpty } = require('./_lib/db');
-const { handleCors } = require('./_lib/auth');
+const { connectToDatabase, seedServicesIfEmpty } = require('../_lib/db');
+const { handleCors } = require('../_lib/auth');
 
 module.exports = async function handler(req, res) {
   if (handleCors(req, res)) return;

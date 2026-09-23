@@ -7,7 +7,7 @@
  * Admin credentials are stored in ADMIN_EMAIL and ADMIN_PASSWORD env vars.
  */
 
-const { generateToken, handleCors } = require('../_lib/auth');
+const { generateToken, handleCors } = require('../../_lib/auth');
 
 module.exports = async function handler(req, res) {
   if (handleCors(req, res)) return;

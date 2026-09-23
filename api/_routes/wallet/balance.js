@@ -5,8 +5,8 @@
  */
 
 const { ObjectId } = require('mongodb');
-const { connectToDatabase } = require('../_lib/db');
-const { requireAuth, handleCors } = require('../_lib/auth');
+const { connectToDatabase } = require('../../_lib/db');
+const { requireAuth, handleCors } = require('../../_lib/auth');
 
 module.exports = async function handler(req, res) {
   if (handleCors(req, res)) return;
