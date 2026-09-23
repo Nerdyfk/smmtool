@@ -1,0 +1,6 @@
+{
+  "name": "SMMTOOL",
+  "description": "Global & Bangladesh SMM service provider platform for social growth automation with Bangla QR and EVM crypto support.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
