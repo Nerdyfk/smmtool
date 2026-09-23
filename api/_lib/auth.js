@@ -83,4 +83,19 @@ function handleCors(req, res) {
   return false;
 }
 
-module.exports = { generateToken, verifyToken, requireAuth, requireAdmin, handleCors };
+const handler = (req, res) => {
+  if (res && res.status) return res.status(404).json({ error: 'Not an API endpoint' });
+};
+handler.generateToken = generateToken;
+handler.verifyToken = verifyToken;
+handler.requireAuth = requireAuth;
+handler.requireAdmin = requireAdmin;
+handler.handleCors = handleCors;
+
+module.exports = handler;
+module.exports.generateToken = generateToken;
+module.exports.verifyToken = verifyToken;
+module.exports.requireAuth = requireAuth;
+module.exports.requireAdmin = requireAdmin;
+module.exports.handleCors = handleCors;
+

@@ -5,8 +5,8 @@
  * Requires admin JWT.
  */
 
-const { connectToDatabase } = require('../lib/db');
-const { requireAdmin, handleCors } = require('../lib/auth');
+const { connectToDatabase } = require('../_lib/db');
+const { requireAdmin, handleCors } = require('../_lib/auth');
 
 const DEFAULT_GATEWAYS = {
   banglaQr: {

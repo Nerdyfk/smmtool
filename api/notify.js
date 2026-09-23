@@ -5,8 +5,8 @@
  * Requires admin JWT or internal trigger.
  */
 
-const { connectToDatabase } = require('./lib/db');
-const { handleCors } = require('./lib/auth');
+const { connectToDatabase } = require('./_lib/db');
+const { handleCors } = require('./_lib/auth');
 
 module.exports = async function handler(req, res) {
   if (handleCors(req, res)) return;

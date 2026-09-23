@@ -61,4 +61,13 @@ async function seedServicesIfEmpty(db, servicesData) {
   }
 }
 
-module.exports = { connectToDatabase, seedServicesIfEmpty };
+const handler = (req, res) => {
+  if (res && res.status) return res.status(404).json({ error: 'Not an API endpoint' });
+};
+handler.connectToDatabase = connectToDatabase;
+handler.seedServicesIfEmpty = seedServicesIfEmpty;
+
+module.exports = handler;
+module.exports.connectToDatabase = connectToDatabase;
+module.exports.seedServicesIfEmpty = seedServicesIfEmpty;
+

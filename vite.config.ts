@@ -1,3 +1,4 @@
+import fs from 'fs';
 import path from 'path';
 import {defineConfig} from 'vite';
 
@@ -17,5 +18,27 @@ export default defineConfig(() => {
         },
       },
     },
+    plugins: [
+      {
+        name: 'copy-static-assets',
+        closeBundle() {
+          const distDir = path.resolve(__dirname, 'dist');
+          for (const dir of ['js', 'css', 'admin']) {
+            const src = path.resolve(__dirname, dir);
+            const dest = path.resolve(distDir, dir);
+            if (fs.existsSync(src)) {
+              fs.cpSync(src, dest, { recursive: true });
+            }
+          }
+          for (const file of ['robots.txt', 'sitemap.xml']) {
+            const src = path.resolve(__dirname, file);
+            const dest = path.resolve(distDir, file);
+            if (fs.existsSync(src)) {
+              fs.copyFileSync(src, dest);
+            }
+          }
+        },
+      },
+    ],
   };
 });
