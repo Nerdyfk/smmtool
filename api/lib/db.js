@@ -9,10 +9,6 @@ const { MongoClient } = require('mongodb');
 const MONGODB_URI = process.env.MONGODB_URI;
 const DB_NAME = process.env.MONGODB_DB || 'smmtool';
 
-if (!MONGODB_URI) {
-  throw new Error('MONGODB_URI environment variable is not set. Add it in Vercel Dashboard → Settings → Environment Variables.');
-}
-
 let cachedClient = null;
 let cachedDb = null;
 
@@ -21,9 +17,16 @@ async function connectToDatabase() {
     return { client: cachedClient, db: cachedDb };
   }
 
-  const client = new MongoClient(MONGODB_URI);
+  const uri = process.env.MONGODB_URI;
+  const dbName = process.env.MONGODB_DB || 'smmtool';
+
+  if (!uri) {
+    throw new Error('MONGODB_URI environment variable is not set. Add it in Vercel Dashboard → Settings → Environment Variables.');
+  }
+
+  const client = new MongoClient(uri);
   await client.connect();
-  const db = client.db(DB_NAME);
+  const db = client.db(dbName);
 
   cachedClient = client;
   cachedDb = db;
