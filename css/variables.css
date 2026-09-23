@@ -54,8 +54,16 @@
 
   /* Layout Constants */
   --sidebar-width: 270px;
+  --sidebar-mobile-width: min(310px, 84vw);
   --sidebar-collapsed-width: 72px;
   --topbar-height: 70px;
+  --topbar-height-mobile: 56px;
+  --content-padding: 2rem;
+  --card-padding: 1.5rem;
+  --table-cell-padding-y: 1rem;
+  --table-cell-padding-x: 1.5rem;
+  --chart-height: 220px;
+  --touch-target-min: 44px;
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 18px;

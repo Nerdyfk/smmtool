@@ -107,6 +107,328 @@
   color: var(--color-amber);
 }
 
+/* 1b. Dashboard Live Activity & Delivery Velocity Chart */
+.dashboard-chart-card {
+  background: var(--bg-glass-card);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  padding: var(--card-padding);
+  margin-bottom: 2rem;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  transition: all var(--transition-normal);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.dashboard-chart-card:hover {
+  border-color: var(--border-accent);
+  box-shadow: var(--shadow-lg);
+}
+
+.dashboard-chart-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.25rem;
+  width: 100%;
+}
+
+.chart-header-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex: 1 1 240px;
+  min-width: 0;
+}
+
+.chart-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.chart-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+.chart-status-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: var(--radius-full);
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--color-emerald);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.chart-subtitle {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+  margin: 0;
+}
+
+.chart-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.chart-timeframe-selector {
+  display: inline-flex;
+  align-items: center;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 3px;
+  gap: 2px;
+}
+
+.chart-timeframe-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 0.76rem;
+  font-weight: 700;
+  padding: 0.35rem 0.8rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chart-timeframe-btn:hover {
+  color: var(--text-primary);
+}
+
+.chart-timeframe-btn.active {
+  background: var(--color-twitter);
+  color: #ffffff;
+  box-shadow: 0 2px 8px var(--color-twitter-glow);
+}
+
+/* SVG Chart Canvas Container */
+.dashboard-chart-wrapper {
+  position: relative;
+  width: 100%;
+  margin-bottom: 1.25rem;
+  min-width: 0;
+}
+
+.chart-svg-container {
+  position: relative;
+  width: 100%;
+  height: var(--chart-height);
+  min-height: 140px;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  background: rgba(17, 24, 39, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.dashboard-chart-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.chart-axis-label {
+  fill: var(--text-muted);
+  font-size: 10px;
+  font-family: var(--font-mono);
+  font-weight: 500;
+  user-select: none;
+}
+
+.chart-area-fill {
+  transition: d 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.chart-stroke-line {
+  transition: d 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.chart-point {
+  fill: var(--bg-surface);
+  stroke: var(--color-cyan);
+  stroke-width: 2.5;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.chart-point:hover {
+  r: 7;
+  stroke: #ffffff;
+  fill: var(--color-cyan);
+}
+
+.chart-point-pulse {
+  fill: var(--color-emerald);
+  stroke: #ffffff;
+  stroke-width: 2;
+  animation: pulse-ring 2s infinite;
+}
+
+.chart-floating-tooltip {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-accent);
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-md);
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  transition: opacity 0.2s ease;
+  z-index: 5;
+}
+
+.tooltip-time {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.tooltip-val {
+  font-size: 0.85rem;
+  font-weight: 800;
+  font-family: var(--font-mono);
+  color: var(--color-cyan);
+}
+
+.chart-time-ticks {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0.5rem 0;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  user-select: none;
+}
+
+/* Bottom Metrics Row */
+.chart-metrics-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.85rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-subtle);
+  width: 100%;
+}
+
+.chart-metric-item {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.55rem 0.75rem;
+  background: var(--bg-surface-elevated);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  min-width: 0;
+}
+
+.metric-bullet {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.metric-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.metric-label {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.metric-val {
+  font-size: 0.82rem;
+  font-weight: 800;
+  font-family: var(--font-mono);
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 860px) {
+  .chart-metrics-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .dashboard-chart-card {
+    padding: 1rem 0.85rem;
+    margin-bottom: 1.5rem;
+  }
+  .dashboard-chart-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+  .chart-controls {
+    justify-content: flex-start;
+  }
+  .chart-timeframe-btn {
+    min-height: 36px;
+    padding: 0.4rem 0.85rem;
+  }
+  .chart-svg-container {
+    height: 160px;
+  }
+  .chart-axis-label {
+    display: none;
+  }
+  .chart-metrics-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+  .chart-metric-item {
+    padding: 0.45rem 0.55rem;
+  }
+}
+
+@media (max-width: 380px) {
+  .chart-metrics-row {
+    grid-template-columns: 1fr;
+  }
+  .chart-time-ticks span:nth-child(even) {
+    display: none;
+  }
+}
+
 /* 2. Platform Hero & Category Cards */
 .platforms-grid {
   display: grid;
@@ -694,11 +1016,38 @@
 
 .table-responsive {
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--bg-surface-elevated) transparent;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.table-responsive::-webkit-scrollbar {
+  height: 6px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+  background: var(--bg-surface-elevated);
+  border-radius: 4px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb:hover {
+  background: var(--border-accent);
 }
 
 .custom-table {
   width: 100%;
+  min-width: 620px;
   border-collapse: collapse;
   text-align: left;
   font-size: 0.88rem;
@@ -707,22 +1056,73 @@
 .custom-table th {
   background: var(--bg-surface-elevated);
   color: var(--text-muted);
-  font-size: 0.75rem;
+  font-size: 0.74rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  padding: 0.85rem 1.5rem;
+  padding: 0.85rem 1.25rem;
   border-bottom: 1px solid var(--border-subtle);
+  white-space: nowrap;
 }
 
 .custom-table td {
-  padding: 1rem 1.5rem;
+  padding: 0.85rem 1.25rem;
   border-bottom: 1px solid var(--border-subtle);
   vertical-align: middle;
 }
 
 .custom-table tr:hover td {
   background: var(--bg-surface-elevated);
+}
+
+/* Data Table (Audit Logs / Bot Streams) */
+.data-table {
+  width: 100%;
+  min-width: 520px;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.8rem;
+}
+
+.data-table th {
+  background: var(--bg-surface-elevated);
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.65rem 0.85rem;
+  border-bottom: 1px solid var(--border-subtle);
+  white-space: nowrap;
+}
+
+.data-table td {
+  padding: 0.65rem 0.85rem;
+  border-bottom: 1px solid var(--border-subtle);
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+/* Fluid Table Toolbars */
+.table-toolbar-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.table-search-wrapper {
+  flex-shrink: 1;
+  min-width: 0;
+}
+
+.table-search-wrapper .feed-search-input {
+  width: 260px;
+  max-width: 100%;
 }
 
 .table-user-cell {
@@ -3973,8 +4373,12 @@
 .tg-log-table-wrapper {
   max-height: 180px;
   overflow-y: auto;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
+  width: 100%;
+  max-width: 100%;
 }
 
 /* ========================================================== */
@@ -4135,6 +4539,38 @@
 }
 
 @media (max-width: 600px) {
+  #toast-container {
+    bottom: 1rem !important;
+    right: 0.75rem !important;
+    left: 0.75rem !important;
+    align-items: center !important;
+  }
+  .toast {
+    min-width: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  .auth-promo-card {
+    padding: 1rem !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+  .auth-promo-left {
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+  .auth-promo-actions {
+    width: 100% !important;
+    display: flex !important;
+    gap: 0.5rem !important;
+  }
+  .btn-auth-promo-signin,
+  .btn-auth-promo-signup {
+    flex: 1 1 0% !important;
+    text-align: center !important;
+    justify-content: center !important;
+  }
   .auth-gate-wrapper {
     padding: 1rem 0.25rem;
   }

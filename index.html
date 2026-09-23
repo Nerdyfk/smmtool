@@ -612,6 +612,125 @@
             </div>
           </div>
 
+          <!-- Real-Time Activity & Growth Velocity Chart -->
+          <div class="dashboard-chart-card">
+            <div class="dashboard-chart-header">
+              <div class="chart-header-info">
+                <div class="chart-title-row">
+                  <span class="pulse-dot"></span>
+                  <h3 class="chart-title">Network Activity & Delivery Velocity</h3>
+                  <span class="chart-status-badge">LIVE 99.98%</span>
+                </div>
+                <p class="chart-subtitle">Real-time hourly dispatch rate, active worker node throughput, and auto-settlement latency.</p>
+              </div>
+              <div class="chart-controls">
+                <div class="chart-timeframe-selector" role="group" aria-label="Chart Timeframe">
+                  <button type="button" class="chart-timeframe-btn active" data-timeframe="24h">24H</button>
+                  <button type="button" class="chart-timeframe-btn" data-timeframe="7d">7D</button>
+                  <button type="button" class="chart-timeframe-btn" data-timeframe="30d">30D</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="dashboard-chart-wrapper">
+              <div class="chart-svg-container" id="dashboard-chart-container">
+                <svg class="dashboard-chart-svg" id="dashboard-velocity-svg" viewBox="0 0 800 210" preserveAspectRatio="none">
+                  <defs>
+                    <linearGradient id="chartGradientTwitter" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stop-color="#1d9bf0" stop-opacity="0.38"/>
+                      <stop offset="60%" stop-color="#6366f1" stop-opacity="0.12"/>
+                      <stop offset="100%" stop-color="#06b6d4" stop-opacity="0.0"/>
+                    </linearGradient>
+                    <linearGradient id="chartLineGradient" x1="0" y1="0" x2="1" y2="0">
+                      <stop offset="0%" stop-color="#06b6d4"/>
+                      <stop offset="50%" stop-color="#1d9bf0"/>
+                      <stop offset="100%" stop-color="#818cf8"/>
+                    </linearGradient>
+                    <filter id="chartGlow" x="-20%" y="-20%" width="140%" height="140%">
+                      <feGaussianBlur stdDeviation="3" result="blur" />
+                      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                    </filter>
+                  </defs>
+
+                  <!-- Horizontal Gridlines -->
+                  <line x1="0" y1="35" x2="800" y2="35" stroke="var(--border-subtle)" stroke-dasharray="4 4" stroke-width="1" />
+                  <line x1="0" y1="85" x2="800" y2="85" stroke="var(--border-subtle)" stroke-dasharray="4 4" stroke-width="1" />
+                  <line x1="0" y1="135" x2="800" y2="135" stroke="var(--border-subtle)" stroke-dasharray="4 4" stroke-width="1" />
+                  <line x1="0" y1="185" x2="800" y2="185" stroke="var(--border-subtle)" stroke-width="1" />
+
+                  <!-- Y-Axis Labels -->
+                  <text class="chart-axis-label" x="12" y="32">1,500/h</text>
+                  <text class="chart-axis-label" x="12" y="82">1,000/h</text>
+                  <text class="chart-axis-label" x="12" y="132">500/h</text>
+                  <text class="chart-axis-label" x="12" y="180">0/h</text>
+
+                  <!-- Responsive SVG Path Area -->
+                  <path id="chart-area-path" class="chart-area-fill" fill="url(#chartGradientTwitter)" d="M 0 185 C 60 170, 100 120, 160 110 C 220 100, 260 145, 320 125 C 380 105, 420 55, 480 65 C 540 75, 580 40, 640 45 C 700 50, 740 75, 800 55 L 800 185 L 0 185 Z" />
+
+                  <!-- Responsive SVG Path Stroke -->
+                  <path id="chart-stroke-path" class="chart-stroke-line" fill="none" stroke="url(#chartLineGradient)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" filter="url(#chartGlow)" d="M 0 185 C 60 170, 100 120, 160 110 C 220 100, 260 145, 320 125 C 380 105, 420 55, 480 65 C 540 75, 580 40, 640 45 C 700 50, 740 75, 800 55" />
+
+                  <!-- Data Point Nodes -->
+                  <g id="chart-points-group">
+                    <circle cx="160" cy="110" r="4.5" class="chart-point" data-val="640 orders/h" data-time="04:00 AM"></circle>
+                    <circle cx="320" cy="125" r="4.5" class="chart-point" data-val="520 orders/h" data-time="08:00 AM"></circle>
+                    <circle cx="480" cy="65"  r="4.5" class="chart-point" data-val="1,180 orders/h" data-time="12:00 PM"></circle>
+                    <circle cx="640" cy="45"  r="4.5" class="chart-point" data-val="1,420 orders/h" data-time="16:00 PM (Peak)"></circle>
+                    <circle cx="800" cy="55"  r="5"   class="chart-point-pulse" data-val="1,385 orders/h" data-time="Live Now"></circle>
+                  </g>
+                </svg>
+
+                <div class="chart-floating-tooltip" id="chart-tooltip">
+                  <div class="tooltip-time" id="tooltip-time">16:00 PM (Peak)</div>
+                  <div class="tooltip-val" id="tooltip-val">1,420 orders/h</div>
+                </div>
+              </div>
+
+              <!-- Time Marks along bottom -->
+              <div class="chart-time-ticks" id="chart-time-ticks">
+                <span>00:00</span>
+                <span>04:00</span>
+                <span>08:00</span>
+                <span>12:00</span>
+                <span>16:00</span>
+                <span>20:00</span>
+                <span style="color: var(--color-emerald); font-weight: 700;">Live Now</span>
+              </div>
+            </div>
+
+            <!-- Bottom Telemetry Legend -->
+            <div class="chart-metrics-row">
+              <div class="chart-metric-item">
+                <span class="metric-bullet" style="background: var(--color-cyan);"></span>
+                <div class="metric-meta">
+                  <span class="metric-label">Peak Velocity</span>
+                  <span class="metric-val" id="chart-telemetry-peak">1,420 orders/h</span>
+                </div>
+              </div>
+              <div class="chart-metric-item">
+                <span class="metric-bullet" style="background: var(--color-twitter);"></span>
+                <div class="metric-meta">
+                  <span class="metric-label">Avg Throughput</span>
+                  <span class="metric-val" id="chart-telemetry-avg">890 orders/h</span>
+                </div>
+              </div>
+              <div class="chart-metric-item">
+                <span class="metric-bullet" style="background: var(--color-emerald);"></span>
+                <div class="metric-meta">
+                  <span class="metric-label">Auto Delivery Rate</span>
+                  <span class="metric-val" id="chart-telemetry-completion">99.96%</span>
+                </div>
+              </div>
+              <div class="chart-metric-item">
+                <span class="metric-bullet" style="background: var(--color-indigo);"></span>
+                <div class="metric-meta">
+                  <span class="metric-label">Global Clusters</span>
+                  <span class="metric-val" id="chart-telemetry-clusters">14 Nodes Active</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- Platform Categories Grid -->
           <div class="platforms-grid">
             <!-- Twitter/X Card -->
@@ -1439,7 +1558,7 @@
           </div>
 
           <!-- Filter Pills & Search Bar -->
-          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem;">
+          <div class="table-toolbar-container">
             <div class="services-filter-pills" id="services-filter-pills">
               <button type="button" class="services-filter-btn active" data-category="all">All Services</button>
               <button type="button" class="services-filter-btn" data-category="twitter">Twitter / X</button>
@@ -1454,8 +1573,8 @@
               <button type="button" class="services-filter-btn" data-category="traffic">Web Traffic</button>
             </div>
 
-            <div>
-              <input type="text" class="feed-search-input" id="services-search-input" placeholder="Search service name, platform..." style="width: 260px;">
+            <div class="table-search-wrapper">
+              <input type="text" class="feed-search-input" id="services-search-input" placeholder="Search service name, platform...">
             </div>
           </div>
 
@@ -1617,15 +1736,15 @@
 
           <!-- Authenticated User Content (Visible ONLY when signed in) -->
           <div id="orders-history-user-content" style="display: none;">
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem;">
+            <div class="table-toolbar-container">
               <div class="services-filter-pills" id="orders-status-filters">
                 <button type="button" class="orders-filter-btn active" data-status="all">All Orders</button>
                 <button type="button" class="orders-filter-btn" data-status="in-progress">In Progress</button>
                 <button type="button" class="orders-filter-btn" data-status="completed">Completed</button>
               </div>
 
-              <div>
-                <input type="text" class="feed-search-input" id="orders-search-input" placeholder="Search order ID, link, service..." style="width: 260px;">
+              <div class="table-search-wrapper">
+                <input type="text" class="feed-search-input" id="orders-search-input" placeholder="Search order ID, link, service...">
               </div>
             </div>
 
@@ -3104,6 +3223,7 @@
   <script src="js/profile.js"></script>
   <script src="js/orders.js"></script>
   <script src="js/feed.js"></script>
+  <script src="js/chart.js"></script>
   <script src="js/tools.js"></script>
   <script src="js/modal.js"></script>
   <script src="js/support.js"></script>
