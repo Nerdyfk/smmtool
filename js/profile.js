@@ -90,15 +90,31 @@ class ProfileManager {
     const heroBalance = document.getElementById('profile-hero-balance');
     const heroOrders = document.getElementById('profile-hero-orders');
 
+    const isLoggedIn = Boolean(user && user.isLoggedIn);
+
+    const guestGate = document.getElementById('account-settings-guest-gate');
+    const userContent = document.getElementById('account-settings-user-content');
+
+    if (guestGate) guestGate.style.display = isLoggedIn ? 'none' : 'flex';
+    if (userContent) userContent.style.display = isLoggedIn ? 'block' : 'none';
+
+    if (!isLoggedIn) {
+      if (usernameInput) usernameInput.value = '';
+      if (nameInput) nameInput.value = '';
+      if (emailInput) emailInput.value = '';
+      if (apiKeyDisplay) apiKeyDisplay.value = '';
+      return;
+    }
+
     if (usernameInput) usernameInput.value = user.username || '';
     if (nameInput) nameInput.value = user.name || '';
     if (emailInput) emailInput.value = user.email || '';
     if (tzSelect && user.timezone) tzSelect.value = user.timezone;
-    if (apiKeyDisplay) apiKeyDisplay.value = user.apiKey || 'pk_live_default_key';
+    if (apiKeyDisplay) apiKeyDisplay.value = user.apiKey || '';
 
     if (heroUsername) heroUsername.textContent = `@${user.username}`;
-    if (heroTier) heroTier.textContent = user.tier || 'VIP Gold';
-    if (heroAvatar && user.avatar) heroAvatar.src = user.avatar;
+    if (heroTier) heroTier.textContent = user.tier || 'Standard';
+    if (heroAvatar) heroAvatar.src = user.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80';
     if (heroBalance) heroBalance.textContent = `$${(user.balance || 0).toFixed(2)}`;
     if (heroOrders) heroOrders.textContent = user.ordersCount || 0;
 
@@ -118,10 +134,16 @@ class ProfileManager {
     form.addEventListener('submit', (e) => {
       e.preventDefault();
 
+      if (!window.authManager || !window.authManager.user || !window.authManager.user.isLoggedIn) {
+        window.toolkityApp?.showToast('Sign In Required', 'Please sign in or register to update your profile.', 'info');
+        window.authManager?.openLoginModal();
+        return;
+      }
+
       const newUsername = (document.getElementById('profile-username-input')?.value || '').trim();
       const newName = (document.getElementById('profile-name-input')?.value || '').trim();
       const newEmail = (document.getElementById('profile-email-input')?.value || '').trim();
-      const newTz = document.getElementById('profile-timezone-select')?.value || 'UTC - 05:00 (EST)';
+      const newTz = document.getElementById('profile-timezone-select')?.value || 'UTC';
 
       if (!newUsername || newUsername.length < 3) {
         window.toolkityApp?.showToast('Validation Error', 'Username must be at least 3 characters.', 'warning');

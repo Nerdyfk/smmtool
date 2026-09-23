@@ -142,6 +142,20 @@ class ToolkityApp {
     // Scroll back to top
     window.scrollTo({ top: 0, behavior: 'smooth' });
     this.playAudioBeep(520);
+
+    // Refresh view data and ensure auth gates are in correct state
+    if (viewName === 'orders-history' && window.ordersManager) {
+      window.ordersManager.renderOrdersTable();
+    }
+    if (viewName === 'add-funds' && window.walletManager && window.authManager) {
+      window.walletManager.updateBalanceDisplay(window.authManager.user);
+    }
+    if (viewName === 'account-settings' && window.profileManager && window.authManager) {
+      window.profileManager.populateFields(window.authManager.user);
+    }
+    if (viewName === 'support-tickets' && window.supportManager) {
+      window.supportManager.renderUserTickets();
+    }
   }
 
   // Mobile Sidebar Drawer & Overlay Control

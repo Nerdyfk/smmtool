@@ -16,6 +16,7 @@ export default defineConfig(() => {
         input: {
           main: path.resolve(rootDir, 'index.html'),
           admin: path.resolve(rootDir, 'admin.html'),
+          adminPortal: path.resolve(rootDir, 'admin/index.html'),
         },
       },
     },

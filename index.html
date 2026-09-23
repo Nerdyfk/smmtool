@@ -185,6 +185,9 @@
   <link rel="stylesheet" href="css/variables.css">
   <link rel="stylesheet" href="css/main.css">
   <link rel="stylesheet" href="css/components.css">
+
+  <!-- Google Identity Services (GIS) for Native Account Sign-In -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
 
@@ -1589,36 +1592,62 @@
             </button>
           </div>
 
-          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem;">
-            <div class="services-filter-pills" id="orders-status-filters">
-              <button type="button" class="orders-filter-btn active" data-status="all">All Orders</button>
-              <button type="button" class="orders-filter-btn" data-status="in-progress">In Progress</button>
-              <button type="button" class="orders-filter-btn" data-status="completed">Completed</button>
-            </div>
-
-            <div>
-              <input type="text" class="feed-search-input" id="orders-search-input" placeholder="Search order ID, link, service..." style="width: 260px;">
+          <!-- Guest Locked Gatekeeper (Visible when NOT signed in) -->
+          <div class="auth-gate-wrapper" id="orders-history-guest-gate">
+            <div class="auth-gate-card">
+              <div class="auth-gate-icon-badge">📦</div>
+              <h2 class="auth-gate-title">Order History Locked</h2>
+              <p class="auth-gate-desc">
+                You are currently browsing as a guest. Please sign in or create an account to view your past orders, track real-time fulfillment progress, and download receipts.
+              </p>
+              <div class="auth-gate-actions">
+                <button type="button" class="auth-gate-btn-google" onclick="window.authManager.openLoginModal()">
+                  <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.65v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.14z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"/><path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 10.03 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/></svg>
+                  <span>Sign In with Google</span>
+                </button>
+                <button type="button" class="auth-gate-btn-signup" onclick="window.authManager.openRegisterModal()">
+                  <span>🚀 Register New Account ($10 Bonus)</span>
+                </button>
+                <button type="button" class="auth-gate-btn-signin" onclick="window.authManager.openLoginModal()">
+                  <span>🔑 Sign In with Email</span>
+                </button>
+              </div>
             </div>
           </div>
 
-          <div class="feed-card">
-            <div class="table-responsive">
-              <table class="custom-table">
-                <thead>
-                  <tr>
-                    <th>Order ID</th>
-                    <th>Platform</th>
-                    <th>Service & Link</th>
-                    <th>Quantity</th>
-                    <th>Charge ($)</th>
-                    <th>Status</th>
-                    <th>Date</th>
-                  </tr>
-                </thead>
-                <tbody id="orders-history-tbody">
-                  <!-- Injected by js/orders.js -->
-                </tbody>
-              </table>
+          <!-- Authenticated User Content (Visible ONLY when signed in) -->
+          <div id="orders-history-user-content" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem;">
+              <div class="services-filter-pills" id="orders-status-filters">
+                <button type="button" class="orders-filter-btn active" data-status="all">All Orders</button>
+                <button type="button" class="orders-filter-btn" data-status="in-progress">In Progress</button>
+                <button type="button" class="orders-filter-btn" data-status="completed">Completed</button>
+              </div>
+
+              <div>
+                <input type="text" class="feed-search-input" id="orders-search-input" placeholder="Search order ID, link, service..." style="width: 260px;">
+              </div>
+            </div>
+
+            <div class="feed-card">
+              <div class="table-responsive">
+                <table class="custom-table">
+                  <thead>
+                    <tr>
+                      <th>Order ID</th>
+                      <th>Platform</th>
+                      <th>Service & Link</th>
+                      <th>Quantity</th>
+                      <th>Charge ($)</th>
+                      <th>Status</th>
+                      <th>Date</th>
+                    </tr>
+                  </thead>
+                  <tbody id="orders-history-tbody">
+                    <!-- Injected by js/orders.js -->
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </section>
@@ -1639,12 +1668,37 @@
             </div>
           </div>
 
-          <!-- Account Balance Telemetry Header -->
-          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem;">
+          <!-- Guest Locked Gatekeeper (Visible when NOT signed in) -->
+          <div class="auth-gate-wrapper" id="add-funds-guest-gate">
+            <div class="auth-gate-card">
+              <div class="auth-gate-icon-badge">💳</div>
+              <h2 class="auth-gate-title">Wallet & Deposit Engine Locked</h2>
+              <p class="auth-gate-desc">
+                You must be signed in to add money to your account, scan Bangla QR codes (bKash, Nagad, Rocket, Bank), deposit EVM crypto, and view your live account balance.
+              </p>
+              <div class="auth-gate-actions">
+                <button type="button" class="auth-gate-btn-google" onclick="window.authManager.openLoginModal()">
+                  <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.65v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.14z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"/><path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 10.03 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/></svg>
+                  <span>Sign In with Google</span>
+                </button>
+                <button type="button" class="auth-gate-btn-signup" onclick="window.authManager.openRegisterModal()">
+                  <span>🚀 Register New Account ($10 Bonus)</span>
+                </button>
+                <button type="button" class="auth-gate-btn-signin" onclick="window.authManager.openLoginModal()">
+                  <span>🔑 Sign In with Email</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Authenticated User Content (Visible ONLY when signed in) -->
+          <div id="add-funds-user-content" style="display: none;">
+            <!-- Account Balance Telemetry Header -->
+            <div class="wallet-stats-grid">
             <div class="stat-card" style="border-color: rgba(16, 185, 129, 0.3); background: rgba(16, 185, 129, 0.05);">
               <div class="stat-info">
                 <span class="stat-label">Available Balance</span>
-                <div class="stat-value" id="wallet-current-balance" style="color: var(--color-emerald);">$45.00 USD</div>
+                <div class="stat-value" id="wallet-current-balance" style="color: var(--color-emerald);">$0.00 USD</div>
               </div>
               <div class="stat-icon-wrapper" style="background: rgba(16, 185, 129, 0.2); color: var(--color-emerald);">💵</div>
             </div>
@@ -1652,7 +1706,7 @@
             <div class="stat-card">
               <div class="stat-info">
                 <span class="stat-label">Lifetime Deposited / Spent</span>
-                <div class="stat-value" id="wallet-total-spent">$182.40 USD</div>
+                <div class="stat-value" id="wallet-total-spent">$0.00 USD</div>
               </div>
               <div class="stat-icon-wrapper" style="background: rgba(6, 182, 212, 0.2); color: var(--color-cyan);">💳</div>
             </div>
@@ -1660,7 +1714,7 @@
             <div class="stat-card">
               <div class="stat-info">
                 <span class="stat-label">Account Tier</span>
-                <div class="stat-value" id="wallet-account-tier" style="color: var(--color-amber);">VIP Gold</div>
+                <div class="stat-value" id="wallet-account-tier" style="color: var(--color-amber);">Standard</div>
               </div>
               <div class="stat-icon-wrapper" style="background: rgba(245, 158, 11, 0.2); color: var(--color-amber);">👑</div>
             </div>
@@ -1865,6 +1919,7 @@
               </div>
             </div>
           </div>
+        </div>
         </section>
 
         <!-- ============================================ -->
@@ -1883,21 +1938,46 @@
             </div>
           </div>
 
-          <div class="profile-settings-grid">
+          <!-- Guest Locked Gatekeeper (Visible when NOT signed in) -->
+          <div class="auth-gate-wrapper" id="account-settings-guest-gate">
+            <div class="auth-gate-card">
+              <div class="auth-gate-icon-badge">👤</div>
+              <h2 class="auth-gate-title">Account & Profile Settings Locked</h2>
+              <p class="auth-gate-desc">
+                You are currently browsing as a guest. Please sign in or register to customize your username, manage profile security, view wallet balances, and generate reseller API keys.
+              </p>
+              <div class="auth-gate-actions">
+                <button type="button" class="auth-gate-btn-google" onclick="window.authManager.openLoginModal()">
+                  <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.65v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.14z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"/><path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 10.03 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/></svg>
+                  <span>Sign In with Google</span>
+                </button>
+                <button type="button" class="auth-gate-btn-signup" onclick="window.authManager.openRegisterModal()">
+                  <span>🚀 Register New Account ($10 Bonus)</span>
+                </button>
+                <button type="button" class="auth-gate-btn-signin" onclick="window.authManager.openLoginModal()">
+                  <span>🔑 Sign In with Email</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Authenticated User Content (Visible ONLY when signed in) -->
+          <div id="account-settings-user-content" style="display: none;">
+            <div class="profile-settings-grid">
             <!-- Left Hero Card -->
             <div class="profile-hero-card">
               <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80" alt="Avatar" class="profile-hero-avatar-img" id="profile-hero-avatar">
-              <h2 id="profile-hero-username" style="font-size: 1.25rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.25rem;">@global_builder</h2>
-              <span class="status-badge active" id="profile-hero-tier" style="font-size: 0.75rem;">VIP Gold Member</span>
+              <h2 id="profile-hero-username" style="font-size: 1.25rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.25rem;">@username</h2>
+              <span class="status-badge active" id="profile-hero-tier" style="font-size: 0.75rem;">Standard</span>
 
               <div class="profile-stats-grid">
                 <div class="profile-stat-box">
                   <div class="profile-stat-label">Balance</div>
-                  <div class="profile-stat-value" id="profile-hero-balance">$45.00</div>
+                  <div class="profile-stat-value" id="profile-hero-balance">$0.00</div>
                 </div>
                 <div class="profile-stat-box">
                   <div class="profile-stat-label">Orders</div>
-                  <div class="profile-stat-value" id="profile-hero-orders">8</div>
+                  <div class="profile-stat-value" id="profile-hero-orders">0</div>
                 </div>
               </div>
 
@@ -1926,15 +2006,15 @@
               <form id="profile-settings-form">
                 <div class="form-group">
                   <label class="form-label">Username</label>
-                  <input type="text" class="form-input no-icon" id="profile-username-input" value="global_builder" required>
+                  <input type="text" class="form-input no-icon" id="profile-username-input" value="" placeholder="e.g. username" required>
                 </div>
                 <div class="form-group">
                   <label class="form-label">Display Name</label>
-                  <input type="text" class="form-input no-icon" id="profile-name-input" value="Alex Vance" required>
+                  <input type="text" class="form-input no-icon" id="profile-name-input" value="" placeholder="e.g. Full Name" required>
                 </div>
                 <div class="form-group">
                   <label class="form-label">Email Address</label>
-                  <input type="email" class="form-input no-icon" id="profile-email-input" value="builder@global-smm.com" required>
+                  <input type="email" class="form-input no-icon" id="profile-email-input" value="" placeholder="name@domain.com" required>
                 </div>
                 <div class="form-group">
                   <label class="form-label">Timezone</label>
@@ -2231,6 +2311,7 @@
               </div>
             </div>
           </div>
+        </div>
         </section>
 
         <!-- ============================================ -->
@@ -2253,7 +2334,31 @@
             </button>
           </div>
 
-          <div style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 1.5rem; align-items: start;">
+          <!-- Guest Locked Gatekeeper (Visible when NOT signed in) -->
+          <div class="auth-gate-wrapper" id="support-tickets-guest-gate">
+            <div class="auth-gate-card">
+              <div class="auth-gate-icon-badge">🎫</div>
+              <h2 class="auth-gate-title">Support Desk Locked</h2>
+              <p class="auth-gate-desc">
+                You are currently browsing as a guest. Please sign in or register to submit inquiry tickets, request order refills, verify transactions, and chat with 24/7 resolver admins.
+              </p>
+              <div class="auth-gate-actions">
+                <button type="button" class="auth-gate-btn-google" onclick="window.authManager.openLoginModal()">
+                  <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.65v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.14z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"/><path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 10.03 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/></svg>
+                  <span>Sign In with Google</span>
+                </button>
+                <button type="button" class="auth-gate-btn-signup" onclick="window.authManager.openRegisterModal()">
+                  <span>🚀 Register New Account ($10 Bonus)</span>
+                </button>
+                <button type="button" class="auth-gate-btn-signin" onclick="window.authManager.openLoginModal()">
+                  <span>🔑 Sign In with Email</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Authenticated User Content (Visible ONLY when signed in) -->
+          <div class="support-tickets-grid" id="support-tickets-user-content" style="display: none;">
             <!-- Left: Submit New Ticket Form -->
             <div class="new-order-card">
               <h3 style="font-size: 1.05rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.5rem;">
@@ -2828,17 +2933,6 @@
                 <span class="google-btn-sub">Instant 1-Click login or signup</span>
               </div>
             </button>
-
-            <!-- Quick Google Account Chooser Panel -->
-            <div class="google-quick-picker" id="google-quick-picker" style="display: none;">
-              <div class="google-quick-title">
-                <span>Choose Google Account</span>
-                <button type="button" id="google-picker-close" style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1rem;">✕</button>
-              </div>
-              <div id="google-accounts-container">
-                <!-- Rendered dynamically by js/auth.js -->
-              </div>
-            </div>
           </div>
 
           <div class="auth-divider">
@@ -2860,7 +2954,7 @@
                     <circle cx="12" cy="7" r="4"></circle>
                   </svg>
                 </span>
-                <input type="text" class="vibe-input" id="auth-name-input" placeholder="e.g. Alex Vance" autocomplete="name">
+                <input type="text" class="vibe-input" id="auth-name-input" placeholder="e.g. John Doe" autocomplete="name">
               </div>
             </div>
 
@@ -2943,6 +3037,61 @@
   <div id="auth-login-modal" style="display: none;"></div>
   <div id="auth-register-modal" style="display: none;"></div>
   <div id="google-auth-modal" style="display: none;"></div>
+
+  <!-- Real Google Account Permission & Authorization Modal -->
+  <div class="google-auth-overlay" id="google-permission-modal" style="display: none;">
+    <div class="google-auth-card">
+      <div class="google-card-header">
+        <div class="google-logo-wrap">
+          <svg viewBox="0 0 24 24" width="24" height="24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+          </svg>
+        </div>
+        <div style="flex: 1;">
+          <h3 style="margin: 0; font-size: 1.1rem; font-weight: 700; color: var(--text-primary);">Sign in with Google</h3>
+          <p style="margin: 0.15rem 0 0; font-size: 0.78rem; color: var(--text-muted);">Choose a Google Account from your device</p>
+        </div>
+        <button type="button" class="google-close-btn" id="google-perm-close" aria-label="Close">✕</button>
+      </div>
+
+      <div class="google-card-body">
+        <div id="google-gsi-button-container" style="margin-bottom: 1.25rem; display: flex; justify-content: center;"></div>
+
+        <form id="google-auth-device-form" novalidate>
+          <div style="margin-bottom: 1rem;">
+            <label style="display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 0.35rem;">
+              Google Account Email on This Device
+            </label>
+            <div style="position: relative; display: flex; align-items: center;">
+              <input type="email" id="google-device-email-input" class="vibe-input" placeholder="e.g. yourname@gmail.com" required autocomplete="email" style="padding-left: 2.75rem; width: 100%;">
+              <span style="position: absolute; left: 0.85rem; font-size: 1.1rem; pointer-events: none;">✉️</span>
+            </div>
+            <span style="font-size: 0.72rem; color: var(--text-muted); display: block; margin-top: 0.35rem;">Enter or confirm your active Google or Google Workspace email address.</span>
+          </div>
+
+          <!-- Explicit Permission Notice -->
+          <div style="background: rgba(66, 133, 244, 0.08); border: 1px solid rgba(66, 133, 244, 0.22); border-radius: var(--radius-md); padding: 0.85rem; margin-bottom: 1.25rem;">
+            <div style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; font-weight: 700; color: #60a5fa; margin-bottom: 0.35rem;">
+              <span>🛡️</span> Permission Authorization
+            </div>
+            <p style="font-size: 0.74rem; color: var(--text-muted); margin: 0; line-height: 1.5;">
+              To continue, Google will share your verified name, email address, and profile picture with <strong>SMMTOOL Global Platform</strong>.
+            </p>
+          </div>
+
+          <div style="display: flex; align-items: center; justify-content: flex-end; gap: 0.75rem;">
+            <button type="button" class="btn-ghost-vibe" id="google-perm-cancel" style="padding: 0.55rem 1.25rem; font-size: 0.85rem; cursor: pointer; border-radius: 8px; border: 1px solid var(--border-subtle); background: transparent; color: var(--text-secondary);">Cancel</button>
+            <button type="submit" class="btn-primary-vibe" id="google-perm-submit" style="padding: 0.55rem 1.5rem; font-size: 0.85rem; font-weight: 700; cursor: pointer; border-radius: 8px; background: #4285f4; color: #ffffff; border: none;">
+              <span>Allow & Continue</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
 
   <!-- Toast Notification Container -->
   <div id="toast-container"></div>

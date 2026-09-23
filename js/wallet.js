@@ -359,10 +359,17 @@ class WalletManager {
     const balEl = document.getElementById('wallet-current-balance');
     const spentEl = document.getElementById('wallet-total-spent');
     const tierEl = document.getElementById('wallet-account-tier');
+    const guestGate = document.getElementById('add-funds-guest-gate');
+    const userContent = document.getElementById('add-funds-user-content');
 
-    if (balEl) balEl.textContent = `$${(user.balance || 0).toFixed(2)} USD`;
-    if (spentEl) spentEl.textContent = `$${(user.totalSpent || 0).toFixed(2)} USD`;
-    if (tierEl) tierEl.textContent = user.tier || 'VIP Gold';
+    const isLoggedIn = Boolean(user && user.isLoggedIn);
+
+    if (guestGate) guestGate.style.display = isLoggedIn ? 'none' : 'flex';
+    if (userContent) userContent.style.display = isLoggedIn ? 'block' : 'none';
+
+    if (balEl) balEl.textContent = isLoggedIn ? `$${(user.balance || 0).toFixed(2)} USD` : '$0.00 USD';
+    if (spentEl) spentEl.textContent = isLoggedIn ? `$${(user.totalSpent || 0).toFixed(2)} USD` : '$0.00 USD';
+    if (tierEl) tierEl.textContent = isLoggedIn ? (user.tier || 'Standard') : 'Standard';
   }
 
   setupObserverActions() {
@@ -380,19 +387,26 @@ class WalletManager {
   }
 
   startDepositObserver() {
+    // Check if user is logged in
+    if (!window.authManager || !window.authManager.user || !window.authManager.user.isLoggedIn) {
+      window.toolkityApp?.showToast('Sign In Required', 'Please sign in or register to submit deposit verification and credit your wallet.', 'info');
+      window.authManager?.openLoginModal();
+      return;
+    }
+
     const senderInput = document.getElementById('wallet-sender-address-input');
     const txInput = document.getElementById('wallet-tx-hash-input');
 
-    const sender = senderInput?.value?.trim() || "0x4b7123985F2d90B93eC1423B89E73f848f93E612";
-    const txHash = txInput?.value?.trim() || "0x89f41a3d9204b7e192c48d9047b198ef37194017b98f24b91048ef0149f1092a";
+    const sender = (senderInput?.value || '').trim();
+    const txHash = (txInput?.value || '').trim();
 
     if (!sender) {
-      window.toolkityApp?.showToast('Missing Sender', 'Please enter your sending address / mobile number.', 'error');
+      window.toolkityApp?.showToast('Missing Sender', 'Please enter your sending address / mobile number.', 'warning');
       senderInput?.focus();
       return;
     }
     if (!txHash) {
-      window.toolkityApp?.showToast('Missing Transaction ID', 'Please enter your TxID / payment receipt.', 'error');
+      window.toolkityApp?.showToast('Missing Transaction ID', 'Please enter your TxID / payment receipt number.', 'warning');
       txInput?.focus();
       return;
     }

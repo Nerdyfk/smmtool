@@ -14,6 +14,7 @@ class SupportManager {
     this.renderUserTickets();
     this.setupForm();
     window.addEventListener('tickets:updated', () => this.renderUserTickets());
+    window.addEventListener('auth:updated', () => this.renderUserTickets());
   }
 
   getTickets() {
@@ -28,6 +29,15 @@ class SupportManager {
   }
 
   renderUserTickets() {
+    const guestGate = document.getElementById('support-tickets-guest-gate');
+    const userContent = document.getElementById('support-tickets-user-content');
+    const isLoggedIn = Boolean(window.authManager && window.authManager.user && window.authManager.user.isLoggedIn);
+
+    if (guestGate) guestGate.style.display = isLoggedIn ? 'none' : 'flex';
+    if (userContent) userContent.style.display = isLoggedIn ? 'grid' : 'none';
+
+    if (!isLoggedIn) return;
+
     const container = document.getElementById('user-tickets-list-container');
     if (!container) return;
 
@@ -104,12 +114,18 @@ class SupportManager {
       const priority = document.getElementById('ticket-priority-select')?.value || 'Medium';
       const description = document.getElementById('ticket-description-input')?.value;
 
+      if (!window.authManager || !window.authManager.user || !window.authManager.user.isLoggedIn) {
+        window.toolkityApp?.showToast('Sign In Required', 'Please sign in or register to submit support tickets.', 'info');
+        window.authManager?.openLoginModal();
+        return;
+      }
+
       if (!subject || !description) {
         window.toolkityApp?.showToast('Missing Fields', 'Please provide a subject and problem description.', 'error');
         return;
       }
 
-      const user = window.authManager?.user || { username: 'global_builder', email: 'builder@smmtool.pro' };
+      const user = window.authManager.user;
       const newId = 'TCK-' + (Math.floor(Math.random() * 9000) + 1000);
       const newTicket = {
         id: newId,

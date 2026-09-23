@@ -20,6 +20,7 @@ class OrdersManager {
 
     window.addEventListener('auth:updated', () => {
       this.updateBalanceIndicator();
+      this.renderOrdersTable();
     });
 
     window.addEventListener('services:updated', () => {
@@ -238,7 +239,17 @@ class OrdersManager {
     if (!balanceNotice || !window.authManager) return;
 
     const user = window.authManager.user;
-    const balance = user ? (user.balance || 0) : 0;
+    const isLoggedIn = Boolean(user && user.isLoggedIn);
+
+    if (!isLoggedIn) {
+      balanceNotice.innerHTML = `
+        <span style="color: #60a5fa; font-weight: 600;">🔒 Sign in to place orders</span>
+        <span style="color: var(--text-muted); font-size: 0.8rem;">(<a href="javascript:void(0)" onclick="window.authManager.openLoginModal()" style="color: var(--color-twitter); text-decoration: underline; font-weight: 600;">Sign in with Google</a>)</span>
+      `;
+      return;
+    }
+
+    const balance = user.balance || 0;
 
     if (balance >= currentCost) {
       balanceNotice.innerHTML = `
@@ -302,7 +313,7 @@ class OrdersManager {
     const newOrderId = "ORD-" + Math.floor(1000 + Math.random() * 9000);
     const orderRecord = {
       id: newOrderId,
-      customer: window.authManager.user.username || 'global_builder',
+      customer: window.authManager.user.username || 'user',
       serviceName: service.name,
       platform: service.platform,
       link: link,
@@ -423,6 +434,15 @@ class OrdersManager {
   }
 
   renderOrdersTable() {
+    const guestGate = document.getElementById('orders-history-guest-gate');
+    const userContent = document.getElementById('orders-history-user-content');
+    const isLoggedIn = Boolean(window.authManager && window.authManager.user && window.authManager.user.isLoggedIn);
+
+    if (guestGate) guestGate.style.display = isLoggedIn ? 'none' : 'flex';
+    if (userContent) userContent.style.display = isLoggedIn ? 'block' : 'none';
+
+    if (!isLoggedIn) return;
+
     const tbody = document.getElementById('orders-history-tbody');
     if (!tbody) return;
 

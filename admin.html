@@ -108,10 +108,14 @@
     </div>
 
     <div style="display: flex; align-items: center; gap: 0.75rem;">
-      <div style="display: flex; align-items: center; gap: 0.5rem; background: var(--bg-surface-elevated); padding: 0.35rem 0.85rem; border-radius: var(--radius-full); border: 1px solid var(--border-subtle);">
-        <span style="font-size: 0.75rem; color: var(--text-muted);">Alert Email:</span>
+      <div id="admin-session-badge" style="display: none; align-items: center; gap: 0.5rem; background: var(--bg-surface-elevated); padding: 0.35rem 0.85rem; border-radius: var(--radius-full); border: 1px solid var(--border-subtle);">
+        <span style="font-size: 0.75rem; color: #a855f7; font-weight: 700;">🛡️ Session:</span>
         <span id="topbar-alert-email" style="font-size: 0.78rem; font-weight: 700; color: #c084fc; font-family: var(--font-mono);">admin@smmtool.pro</span>
       </div>
+
+      <button type="button" id="btn-admin-logout" class="topbar-action-btn" title="Lock & Logout Admin Session" style="display: none; color: #ef4444; border-color: rgba(239, 68, 68, 0.3); background: rgba(239, 68, 68, 0.08); font-size: 0.78rem; font-weight: 600; padding: 0.35rem 0.85rem; border-radius: var(--radius-full); cursor: pointer;">
+        <span>🔒 Lock Portal</span>
+      </button>
 
       <button class="topbar-action-btn" id="theme-toggle-btn" aria-label="Toggle Theme" title="Toggle Theme">
         <!-- Rendered by JS -->
@@ -126,6 +130,56 @@
 
   <!-- Admin Main Portal -->
   <main class="admin-main-wrap">
+    <!-- Backend Admin Gatekeeper Screen -->
+    <div id="admin-gatekeeper-view" style="min-height: 75vh; display: flex; align-items: center; justify-content: center; padding: 2rem 1rem;">
+      <div style="max-width: 440px; width: 100%; background: var(--bg-surface-elevated); border: 1px solid var(--border-accent); border-radius: 20px; padding: 2.5rem 2rem; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);">
+        <div style="text-align: center; margin-bottom: 2rem;">
+          <div style="width: 56px; height: 56px; border-radius: 16px; background: rgba(168, 85, 247, 0.15); border: 1px solid rgba(168, 85, 247, 0.3); display: inline-flex; align-items: center; justify-content: center; font-size: 1.75rem; margin-bottom: 1rem;">
+            🛡️
+          </div>
+          <h2 style="font-size: 1.4rem; font-weight: 800; color: var(--text-primary); margin: 0 0 0.35rem;">SMMTOOL Backend Portal</h2>
+          <p style="font-size: 0.82rem; color: var(--text-muted); margin: 0;">Restricted Administrator & Operator Access</p>
+        </div>
+
+        <div id="admin-login-feedback" style="display: none; padding: 0.75rem 1rem; border-radius: 10px; font-size: 0.82rem; margin-bottom: 1.25rem;"></div>
+
+        <form id="admin-gatekeeper-form" novalidate>
+          <div style="margin-bottom: 1.25rem;">
+            <label style="display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 0.4rem;">
+              Admin Email / System Identity
+            </label>
+            <div style="position: relative;">
+              <input type="email" id="admin-login-email" class="form-input" placeholder="admin@smmtool.pro" required autocomplete="username" style="width: 100%; padding-left: 2.5rem;">
+              <span style="position: absolute; left: 0.85rem; top: 50%; transform: translateY(-50%); font-size: 1rem;">👤</span>
+            </div>
+          </div>
+
+          <div style="margin-bottom: 1.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+              <label style="font-size: 0.8rem; font-weight: 600; color: var(--text-secondary);">Master Security Key / Password</label>
+            </div>
+            <div style="position: relative;">
+              <input type="password" id="admin-login-password" class="form-input" placeholder="••••••••••••" required autocomplete="current-password" style="width: 100%; padding-left: 2.5rem; padding-right: 2.5rem;">
+              <span style="position: absolute; left: 0.85rem; top: 50%; transform: translateY(-50%); font-size: 1rem;">🔑</span>
+              <button type="button" id="admin-pwd-toggle" style="position: absolute; right: 0.85rem; top: 50%; transform: translateY(-50%); background: transparent; border: none; cursor: pointer; font-size: 0.95rem; color: var(--text-muted);">👁️</button>
+            </div>
+          </div>
+
+          <button type="submit" id="admin-login-submit" class="btn-primary-vibe" style="width: 100%; padding: 0.8rem 1.5rem; font-weight: 700; border-radius: 12px; background: linear-gradient(135deg, #a855f7 0%, #7e22ce 100%); color: white; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+            <span>🔒 Authenticate Backend Session</span>
+          </button>
+
+          <div style="margin-top: 1.5rem; text-align: center;">
+            <a href="index.html" style="font-size: 0.8rem; color: var(--text-muted); text-decoration: none; display: inline-flex; align-items: center; gap: 0.35rem;">
+              <span>←</span> <span>Return to Storefront</span>
+            </a>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Protected Admin Dashboard Content -->
+    <div id="admin-portal-content" style="display: none;">
 <!-- ============================================ -->
         <!-- VIEW 17: MASTER ADMIN CONTROL CENTER -->
         <!-- ============================================ -->
@@ -661,6 +715,7 @@ Status: API Dispatched to Provider Queue
             </div>
           </div>
         </section>
+    </div><!-- End #admin-portal-content -->
   </main>
 
   <!-- Modals -->

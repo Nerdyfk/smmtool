@@ -23868,7 +23868,7 @@ const TOOLKITY_DATA = {
       messages: [
         {
           sender: "user",
-          author: "Alex Vance",
+          author: "Customer",
           text: "Hello! My Twitter followers order #ORD-9482 dropped by about 35 followers today. Could you please trigger the 30-day refill?",
           time: "08:30 AM"
         }
@@ -23926,20 +23926,20 @@ const TOOLKITY_DATA = {
     }
   ],
 
-  // Default User Account Profile State (with Admin privileges)
+  // Default User Account Profile State (Guest - Not Logged In)
   currentUser: {
-    isLoggedIn: true,
-    role: "admin", // Admin role gives complete website control
-    username: "global_builder",
-    name: "Alex Vance",
-    email: "builder@smmtool.pro",
-    avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80",
-    balance: 92.71,
-    totalSpent: 234.69,
-    ordersCount: 9,
-    apiKey: "smmtool_live_79a24c18f902b3e8",
-    tier: "Master Admin & VIP Elite",
-    timezone: "UTC - 05:00 (EST)"
+    isLoggedIn: false,
+    role: "guest",
+    username: "guest",
+    name: "Guest User",
+    email: "",
+    avatar: "https://api.dicebear.com/7.x/identicon/svg?seed=guest",
+    balance: 0.00,
+    totalSpent: 0.00,
+    ordersCount: 0,
+    apiKey: "",
+    tier: "Standard",
+    timezone: "UTC"
   },
 
   // Seed User Orders for Order History
