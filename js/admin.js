@@ -399,9 +399,46 @@ class AdminManager {
   // 2. ORDER MANAGEMENT CONTROLLER
   // ==========================================
 
-  renderOrdersTable(filter = 'all') {
+  parseOrderDate(dateVal) {
+    if (!dateVal) return null;
+    if (dateVal instanceof Date) return isNaN(dateVal.getTime()) ? null : dateVal;
+    if (typeof dateVal === 'number') return new Date(dateVal);
+    if (typeof dateVal === 'string') {
+      const normalized = dateVal.includes(' ') && !dateVal.includes('T') ? dateVal.replace(' ', 'T') : dateVal;
+      const d = new Date(normalized);
+      if (!isNaN(d.getTime())) return d;
+      const d2 = new Date(dateVal);
+      if (!isNaN(d2.getTime())) return d2;
+    }
+    return null;
+  }
+
+  renderOrdersTable(filter = null) {
     const tbody = document.getElementById('admin-orders-tbody');
     if (!tbody) return;
+
+    const statusDropdown = document.getElementById('admin-orders-status-filter');
+    if (filter && statusDropdown && statusDropdown.value !== filter) {
+      statusDropdown.value = filter;
+    }
+
+    const statusFilter = statusDropdown?.value || 'all';
+    const dateFilter = document.getElementById('admin-orders-date-filter')?.value || 'all';
+    const searchQuery = (document.getElementById('admin-orders-search')?.value || '').trim().toLowerCase();
+    const startDateInput = document.getElementById('admin-orders-start-date')?.value;
+    const endDateInput = document.getElementById('admin-orders-end-date')?.value;
+    const resetBtn = document.getElementById('admin-orders-reset-filters');
+    const countBadge = document.getElementById('admin-orders-count-badge');
+    const customDatesContainer = document.getElementById('admin-orders-custom-dates');
+
+    if (customDatesContainer) {
+      customDatesContainer.style.display = dateFilter === 'custom' ? 'inline-flex' : 'none';
+    }
+
+    const isFiltered = statusFilter !== 'all' || dateFilter !== 'all' || searchQuery !== '' || Boolean(startDateInput || endDateInput);
+    if (resetBtn) {
+      resetBtn.style.display = isFiltered ? 'inline-flex' : 'none';
+    }
 
     let orders = [];
     if (window.ordersManager && Array.isArray(window.ordersManager.orders)) {
@@ -410,13 +447,95 @@ class AdminManager {
       orders = TOOLKITY_DATA.seedOrders || [];
     }
 
-    const filtered = filter === 'all' ? orders : orders.filter(o => o.status.toLowerCase().replace(/\s+/g, '-') === filter.toLowerCase());
+    const now = new Date();
+    const nowTime = now.getTime();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const startOfYesterday = startOfToday - 24 * 60 * 60 * 1000;
+    const twentyFourHoursAgo = nowTime - 24 * 60 * 60 * 1000;
+    const sevenDaysAgo = nowTime - 7 * 24 * 60 * 60 * 1000;
+    const thirtyDaysAgo = nowTime - 30 * 24 * 60 * 60 * 1000;
+
+    let customStart = null;
+    let customEnd = null;
+    if (dateFilter === 'custom') {
+      if (startDateInput) {
+        customStart = new Date(startDateInput + 'T00:00:00').getTime();
+      }
+      if (endDateInput) {
+        customEnd = new Date(endDateInput + 'T23:59:59.999').getTime();
+      }
+    }
+
+    const filtered = orders.filter(o => {
+      // 1. Status Filter
+      if (statusFilter !== 'all') {
+        const orderStatus = (o.status || '').toLowerCase().replace(/\s+/g, '-');
+        const filterNormalized = statusFilter.toLowerCase().replace(/\s+/g, '-');
+        if (orderStatus !== filterNormalized) return false;
+      }
+
+      // 2. Search Query Filter
+      if (searchQuery) {
+        const idMatch = (o.id || '').toLowerCase().includes(searchQuery);
+        const customerMatch = (o.customer || '').toLowerCase().includes(searchQuery);
+        const serviceMatch = (o.serviceName || '').toLowerCase().includes(searchQuery);
+        const linkMatch = (o.link || '').toLowerCase().includes(searchQuery);
+        if (!idMatch && !customerMatch && !serviceMatch && !linkMatch) return false;
+      }
+
+      // 3. Date Range Filter
+      if (dateFilter !== 'all') {
+        const orderDate = this.parseOrderDate(o.date || o.createdAt);
+        if (!orderDate) return false;
+        const orderTime = orderDate.getTime();
+
+        if (dateFilter === '24h') {
+          if (orderTime < twentyFourHoursAgo) return false;
+        } else if (dateFilter === '7d') {
+          if (orderTime < sevenDaysAgo) return false;
+        } else if (dateFilter === '30d') {
+          if (orderTime < thirtyDaysAgo) return false;
+        } else if (dateFilter === 'today') {
+          if (orderTime < startOfToday) return false;
+        } else if (dateFilter === 'yesterday') {
+          if (orderTime < startOfYesterday || orderTime >= startOfToday) return false;
+        } else if (dateFilter === 'custom') {
+          if (customStart && orderTime < customStart) return false;
+          if (customEnd && orderTime > customEnd) return false;
+        }
+      }
+
+      return true;
+    });
+
+    if (countBadge) {
+      countBadge.textContent = `${filtered.length} of ${orders.length} Orders`;
+    }
 
     if (filtered.length === 0) {
+      let filterDesc = [];
+      if (statusFilter !== 'all') filterDesc.push(`status "${statusFilter}"`);
+      if (dateFilter !== 'all') {
+        const dateNames = {
+          '24h': 'last 24 hours',
+          '7d': 'last 7 days',
+          '30d': 'last 30 days',
+          'today': 'today',
+          'yesterday': 'yesterday',
+          'custom': 'selected custom dates'
+        };
+        filterDesc.push(`period ${dateNames[dateFilter] || dateFilter}`);
+      }
+      if (searchQuery) filterDesc.push(`matching "${searchQuery}"`);
+
+      const descText = filterDesc.length > 0 ? filterDesc.join(', ') : 'selected criteria';
+
       tbody.innerHTML = `
         <tr>
-          <td colspan="7" style="text-align: center; padding: 2rem; color: var(--text-muted);">
-            No orders found under filter '${filter}'.
+          <td colspan="8" style="text-align: center; padding: 2.5rem 1rem; color: var(--text-muted);">
+            <div style="font-size: 1.75rem; margin-bottom: 0.5rem;">🔍</div>
+            <div style="font-size: 0.95rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.25rem;">No orders found</div>
+            <div style="font-size: 0.8rem;">No orders recorded under ${descText}. Try broadening your date range or filters.</div>
           </td>
         </tr>
       `;
@@ -444,7 +563,7 @@ class AdminManager {
             <option value="Refunded" ${o.status === 'Refunded' ? 'selected' : ''}>Refunded</option>
           </select>
         </td>
-        <td style="font-size: 0.72rem; color: var(--text-muted);">${o.date}</td>
+        <td style="font-size: 0.72rem; color: var(--text-muted); white-space: nowrap;">${o.date || 'Just now'}</td>
       </tr>
     `).join('');
   }
@@ -769,11 +888,34 @@ class AdminManager {
     if (servicesPlatformFilter) servicesPlatformFilter.addEventListener('change', applyServicesFilters);
     if (servicesStatusFilter) servicesStatusFilter.addEventListener('change', applyServicesFilters);
 
-    // Orders Filter & Search
+    // Orders Filter, Search & Date Range
     const ordersSearch = document.getElementById('admin-orders-search');
     const ordersStatusFilter = document.getElementById('admin-orders-status-filter');
-    if (ordersSearch) ordersSearch.addEventListener('input', () => this.renderOrdersTable(ordersStatusFilter?.value || 'all'));
-    if (ordersStatusFilter) ordersStatusFilter.addEventListener('change', (e) => this.renderOrdersTable(e.target.value));
+    const ordersDateFilter = document.getElementById('admin-orders-date-filter');
+    const ordersStartDate = document.getElementById('admin-orders-start-date');
+    const ordersEndDate = document.getElementById('admin-orders-end-date');
+    const ordersResetBtn = document.getElementById('admin-orders-reset-filters');
+
+    const triggerOrdersFilter = () => this.renderOrdersTable();
+
+    if (ordersSearch) ordersSearch.addEventListener('input', triggerOrdersFilter);
+    if (ordersStatusFilter) ordersStatusFilter.addEventListener('change', triggerOrdersFilter);
+    if (ordersDateFilter) ordersDateFilter.addEventListener('change', triggerOrdersFilter);
+    if (ordersStartDate) ordersStartDate.addEventListener('change', triggerOrdersFilter);
+    if (ordersEndDate) ordersEndDate.addEventListener('change', triggerOrdersFilter);
+
+    if (ordersResetBtn) {
+      ordersResetBtn.addEventListener('click', () => {
+        if (ordersSearch) ordersSearch.value = '';
+        if (ordersStatusFilter) ordersStatusFilter.value = 'all';
+        if (ordersDateFilter) ordersDateFilter.value = 'all';
+        if (ordersStartDate) ordersStartDate.value = '';
+        if (ordersEndDate) ordersEndDate.value = '';
+        const customContainer = document.getElementById('admin-orders-custom-dates');
+        if (customContainer) customContainer.style.display = 'none';
+        this.renderOrdersTable();
+      });
+    }
 
     // Tickets Filter
     const ticketsStatusFilter = document.getElementById('admin-tickets-status-filter');

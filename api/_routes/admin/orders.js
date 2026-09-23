@@ -21,7 +21,7 @@ module.exports = async function handler(req, res) {
 
   try {
     if (req.method === 'GET') {
-      const { status, search, limit = 100, skip = 0 } = req.query || {};
+      const { status, search, dateRange, startDate, endDate, limit = 100, skip = 0 } = req.query || {};
       const filter = {};
 
       if (status && status !== 'all') {
@@ -34,6 +34,34 @@ module.exports = async function handler(req, res) {
           { targetLink: { $regex: search, $options: 'i' } },
           { customerUsername: { $regex: search, $options: 'i' } }
         ];
+      }
+
+      if (dateRange && dateRange !== 'all') {
+        const now = new Date();
+        if (dateRange === '24h') {
+          filter.createdAt = { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) };
+        } else if (dateRange === '7d') {
+          filter.createdAt = { $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) };
+        } else if (dateRange === '30d') {
+          filter.createdAt = { $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) };
+        } else if (dateRange === 'today') {
+          const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          filter.createdAt = { $gte: startOfToday };
+        } else if (dateRange === 'yesterday') {
+          const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          const startOfYesterday = new Date(startOfToday.getTime() - 24 * 60 * 60 * 1000);
+          filter.createdAt = { $gte: startOfYesterday, $lt: startOfToday };
+        }
+      } else if (startDate || endDate) {
+        filter.createdAt = {};
+        if (startDate) {
+          filter.createdAt.$gte = new Date(startDate);
+        }
+        if (endDate) {
+          const endD = new Date(endDate);
+          endD.setHours(23, 59, 59, 999);
+          filter.createdAt.$lte = endD;
+        }
       }
 
       const orders = await ordersCol

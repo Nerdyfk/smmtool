@@ -267,8 +267,9 @@
           <div class="admin-tab-pane" id="admin-pane-orders">
             <div class="new-order-card">
               <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem;">
-                <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center;">
-                  <input type="text" class="form-input no-icon" id="admin-orders-search" placeholder="Search by Order ID, link, customer..." style="width: 260px; padding: 0.45rem 0.75rem; font-size: 0.82rem;">
+                <div style="display: flex; gap: 0.65rem; flex-wrap: wrap; align-items: center;">
+                  <input type="text" class="form-input no-icon" id="admin-orders-search" placeholder="Search ID, link, user..." style="width: 200px; padding: 0.45rem 0.75rem; font-size: 0.82rem;">
+                  
                   <select class="service-select-dropdown" id="admin-orders-status-filter" style="width: auto; padding: 0.45rem 0.75rem; font-size: 0.82rem;">
                     <option value="all">All Statuses</option>
                     <option value="In Progress">In Progress</option>
@@ -277,6 +278,32 @@
                     <option value="Cancelled">Cancelled</option>
                     <option value="Refunded">Refunded</option>
                   </select>
+
+                  <!-- Date Range Filter -->
+                  <div style="display: inline-flex; align-items: center; gap: 0.4rem;">
+                    <select class="service-select-dropdown" id="admin-orders-date-filter" style="width: auto; padding: 0.45rem 0.75rem; font-size: 0.82rem;" title="Filter orders by time period">
+                      <option value="all">📅 All Time</option>
+                      <option value="today">📅 Today</option>
+                      <option value="24h">⏱️ Last 24 Hours</option>
+                      <option value="7d">🗓️ Last 7 Days</option>
+                      <option value="30d">📆 Last 30 Days</option>
+                      <option value="custom">⚙️ Custom Range...</option>
+                    </select>
+
+                    <div id="admin-orders-custom-dates" style="display: none; gap: 0.35rem; align-items: center;">
+                      <input type="date" class="form-input no-icon" id="admin-orders-start-date" title="From Date" style="width: 130px; padding: 0.4rem 0.5rem; font-size: 0.78rem;">
+                      <span style="color: var(--text-muted); font-size: 0.75rem;">to</span>
+                      <input type="date" class="form-input no-icon" id="admin-orders-end-date" title="To Date" style="width: 130px; padding: 0.4rem 0.5rem; font-size: 0.78rem;">
+                    </div>
+                  </div>
+
+                  <button type="button" id="admin-orders-reset-filters" class="orders-filter-btn" style="padding: 0.42rem 0.75rem; font-size: 0.75rem; display: none;" title="Reset search & date filters">
+                    <i class="fa-solid fa-rotate-left" style="margin-right: 0.3rem;"></i> Reset
+                  </button>
+
+                  <span id="admin-orders-count-badge" style="font-size: 0.75rem; font-weight: 700; color: var(--color-twitter); background: rgba(56, 189, 248, 0.12); padding: 0.35rem 0.65rem; border-radius: 6px; border: 1px solid rgba(56, 189, 248, 0.25);">
+                    0 Orders
+                  </span>
                 </div>
 
                 <span style="font-size: 0.78rem; color: var(--text-muted);">
@@ -295,7 +322,7 @@
                       <th style="width: 80px;">Qty</th>
                       <th style="width: 90px;">Charge</th>
                       <th style="width: 130px;">Status Override</th>
-                      <th style="width: 130px;">Quick Action</th>
+                      <th style="width: 130px;">Date & Time</th>
                     </tr>
                   </thead>
                   <tbody id="admin-orders-tbody">
