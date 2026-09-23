@@ -271,8 +271,8 @@ class ToolkityApp {
     searchInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         const query = searchInput.value.toLowerCase().trim();
-        if (query.includes('follow')) this.switchView('twitter-followers');
-        else if (query.includes('unfollow')) this.switchView('twitter-unfollow');
+        if (query.includes('unfollow')) this.switchView('twitter-unfollow');
+        else if (query.includes('follow')) this.switchView('services-catalog');
         else if (query.includes('retweet')) this.switchView('twitter-retweet');
         else if (query.includes('like')) this.switchView('twitter-like');
         else if (query.includes('dm') || query.includes('message')) this.switchView('twitter-dm-cleaner');

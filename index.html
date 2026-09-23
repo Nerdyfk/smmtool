@@ -661,20 +661,19 @@
                       <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
                     </svg>
                   </div>
-                  <span class="platform-tools-count">6 Active Tools</span>
+                  <span class="platform-tools-count">5 Active Tools</span>
                 </div>
                 <div class="platform-body">
                   <h3>Twitter / X Suite</h3>
-                  <p>Comprehensive growth engine. Gain real mutual followers, clean spam DMs, automate retweets, and mass delete old archives.</p>
+                  <p>Comprehensive utility suite. Scan unreciprocated follows, clean spam DMs, automate retweets, and mass delete old archives safely.</p>
                   <ul class="platform-tools-list">
-                    <li><svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg> Free Mutual Follower Exchange</li>
                     <li><svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg> Unfollower & Ghost Account Scanner</li>
                     <li><svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg> Retweet & Like Multipliers</li>
                     <li><svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg> Safe DM Purge & Tweet Eraser</li>
                   </ul>
                 </div>
               </div>
-              <button class="platform-action-btn" onclick="window.toolkityApp.switchView('twitter-followers')">
+              <button class="platform-action-btn" onclick="window.toolkityApp.switchView('twitter-unfollow')">
                 <span>Launch Twitter Suite</span>
                 <span>→</span>
               </button>
@@ -768,122 +767,6 @@
           </div>
         </section>
 
-        <!-- ============================================ -->
-        <!-- VIEW 2: TWITTER FOLLOWERS -->
-        <!-- ============================================ -->
-        <section class="view-container" id="view-twitter-followers">
-          <div class="tool-view-header">
-            <div>
-              <h1 class="tool-view-title">
-                Free Twitter Followers
-                <span class="tool-badge-pill free">FREE EXCHANGE</span>
-              </h1>
-              <p class="tool-view-desc">
-                The most reliable Twitter follower growth engine. Safe, OAuth PIN-based authorization with zero password disclosure. Match with active creators in your niche.
-              </p>
-            </div>
-            <button class="crypto-upgrade-pill-btn" onclick="window.cryptoPaymentModal.open()">
-              <span>🚀</span>
-              <span>Fast-Track with Crypto VIP</span>
-            </button>
-          </div>
-
-          <div class="tool-workspace-grid">
-            <div class="tool-steps-container">
-              <!-- Step 1: PIN Code Authorization -->
-              <div class="step-card">
-                <div class="step-header">
-                  <div class="step-number">1</div>
-                  <div>
-                    <div class="step-title">Generate Twitter Authorization PIN</div>
-                    <div class="step-subtitle">Authorize secure session without revealing your account password</div>
-                  </div>
-                </div>
-
-                <div class="form-group">
-                  <label class="form-label">Twitter / X Username</label>
-                  <div class="input-with-icon">
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-                    </svg>
-                    <input type="text" class="form-input" id="followers-handle-input" placeholder="e.g. SatoshiNakamoto" value="cryptokid_pro">
-                  </div>
-                </div>
-
-                <div class="form-group">
-                  <button type="button" class="btn-launch-tool" style="background: var(--bg-surface-elevated); border: 1px solid var(--border-accent); color: var(--color-twitter); box-shadow: none;" onclick="window.socialToolsEngine.generatePinCode()">
-                    <span>🔑</span>
-                    <span>Generate Official Twitter PIN</span>
-                  </button>
-                </div>
-              </div>
-
-              <!-- Step 2: Target Niche & Execution -->
-              <div class="step-card">
-                <div class="step-header">
-                  <div class="step-number">2</div>
-                  <div>
-                    <div class="step-title">Configure Growth Pool & Launch</div>
-                    <div class="step-subtitle">Target creator niches and dispatch follower exchange tasks</div>
-                  </div>
-                </div>
-
-                <div class="form-group">
-                  <label class="form-label">Authorized PIN Code</label>
-                  <input type="number" class="form-input no-icon" id="followers-pin-input" placeholder="Enter 7-digit PIN code (or click above)">
-                </div>
-
-                <div class="form-group">
-                  <label class="form-label">Select Target Creator Niche</label>
-                  <div class="pills-grid">
-                    <div class="pill-option active">Web3 / Crypto</div>
-                    <div class="pill-option">AI & Tech</div>
-                    <div class="pill-option">Creators & Art</div>
-                    <div class="pill-option">Finance & VC</div>
-                  </div>
-                </div>
-
-                <button class="btn-launch-tool" id="btn-run-followers" onclick="window.socialToolsEngine.startFollowersBooster()">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                  </svg>
-                  <span>Launch Follower Growth Engine</span>
-                </button>
-              </div>
-            </div>
-
-            <!-- Terminal Monitor Window -->
-            <div class="tool-monitor-card">
-              <div class="terminal-header">
-                <div class="terminal-dots">
-                  <span class="terminal-dot red"></span>
-                  <span class="terminal-dot yellow"></span>
-                  <span class="terminal-dot green"></span>
-                </div>
-                <span class="terminal-title">cluster-engine://twitter-followers</span>
-                <span class="terminal-status-badge idle" id="followers-status-badge">READY</span>
-              </div>
-
-              <div class="monitor-progress-section">
-                <div class="progress-metrics-row">
-                  <span class="progress-label">Task Dispatch Progress</span>
-                  <span class="progress-percentage" id="followers-progress-percent">0%</span>
-                </div>
-                <div class="progress-bar-track">
-                  <div class="progress-bar-fill" id="followers-progress-fill"></div>
-                </div>
-              </div>
-
-              <div class="terminal-logs-window" id="followers-terminal-logs">
-                <div class="log-entry">
-                  <span class="log-time">[SYSTEM]</span>
-                  <span class="log-badge info">INFO</span>
-                  <span class="log-text">Toolkity Growth Cluster initialized. Awaiting input parameters...</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
 
         <!-- ============================================ -->
         <!-- VIEW 3: TWITTER UNFOLLOW -->
